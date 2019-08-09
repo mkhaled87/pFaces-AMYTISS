@@ -1,0 +1,72 @@
+#-----------------------------------------------------------------------
+# Project Data
+#-----------------------------------------------------------------------
+project_name = string
+
+#-----------------------------------------------------------------------
+# Output Memory Model
+#-----------------------------------------------------------------------
+data = string
+save_transitions = boolean
+save_controller = boolean
+
+#-----------------------------------------------------------------------
+# State/Input/Disturbance Sets
+#-----------------------------------------------------------------------	
+states = scope
+states.dim = int
+states.eta = string
+states.lb = string
+states.ub = string
+
+inputs = scope
+inputs.dim = int
+inputs.eta = string
+inputs.lb = string
+inputs.ub = string
+
+disturbances = scope
+disturbances.dim = int
+disturbances.eta = string
+disturbances.lb = string
+disturbances.ub = string
+
+#-----------------------------------------------------------------------
+# System Dynamics (add more state variables if required)
+#-----------------------------------------------------------------------
+post_dynamics = scope
+post_dynamics.constant_values = string
+post_dynamics.code_before = string
+post_dynamics.xx0 = string
+post_dynamics.xx1 = string
+post_dynamics.xx2 = string
+post_dynamics.xx3 = string
+post_dynamics.xx4 = string
+post_dynamics.xx5 = string
+post_dynamics.xx6 = string
+post_dynamics.xx7 = string
+post_dynamics.xx8 = string
+post_dynamics.xx9 = string
+post_dynamics.xx10 = string
+post_dynamics.xx11 = string
+post_dynamics.xx12 = string
+post_dynamics.code_after = string
+
+#-----------------------------------------------------------------------
+# Noise information
+#-----------------------------------------------------------------------
+noise = scope
+noise.inv_covariance_matrix = string
+noise.det_covariance_matrix = string
+noise.cutting_probability = string
+noise.cutting_region = string
+
+
+#-----------------------------------------------------------------------
+# Specifications
+#-----------------------------------------------------------------------
+specs = scope
+specs.type = string
+specs.hyperrect = string
+specs.time_steps = int
+specs.avoid_hyperrect = string

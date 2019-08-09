@@ -1,0 +1,1 @@
+rm -f *.txtRm -f *.raw
