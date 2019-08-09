@@ -31,7 +31,7 @@ If you will be using Windows, open the provided project file [amytiss-kernel.sln
 If you will be using Linux or MacOS, assuming you have a GIT client, simply run the following command to clone this repo:
 
 ```
-$ git clone --depth=1 https://gitlab.lrz.de/mk/amytiss
+$ git clone --depth=1 https://github.com/mkhaled87/pFaces-AMYTISS
 
 ```
 
