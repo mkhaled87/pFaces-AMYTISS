@@ -1,0 +1,142 @@
+#-----------------------------------------------------------------------
+# File: amytiss.mem
+# Date: 29.04.2019
+# Athr: M. Khlaed
+# Desc: This file describes the memory buffers needed by the kernel and
+#       how they are distibuted as arguments to the kernel functions
+#       Each top scope is a functin name followed by inner scopes for 
+#       the argument names and they contain the memory fingerprint.
+#-----------------------------------------------------------------------
+
+# Note: functions index (from 0) and argument index (from 0) is considered by there appearancce order
+
+# function: 0- abstract
+# -----------------------
+abstract{ 
+
+	# argument 0.0: RW_bag (gets attached to a new buffer)
+	# ----------------------------------------------------
+	XU_bags{
+		directionWriteOrRead	= "false";
+		HostDoWrite				= "false";
+		HostDoRead				= "false";
+		memAccessFlag			= "CL_MEM_READ_WRITE";
+		baseTypeSize			= "0";
+		baseTypeMultiple		= "1";
+		baseTypeXDimMultiple	= "0";
+		baseTypeYDimMultiple	= "0";
+		deviceMultiple			= "false";
+		isGlobalMemory			= "true";
+		isConstantMemory		= "false";
+		isLocalMemory			= "false";
+		isRangeScalable			= "true";
+		isNewOrResident			= "true";
+		residentFuncIdx			= "-1";
+		residentFuncArgIdx		= "-1";
+		requiresSubBuffering	= "true";
+		equalSubBufferSizes		= "false";
+	}
+}
+
+
+# function: 1- synthesize
+# -----------------------
+synthesize{ 
+
+	# argument 1.0: RW_bag (gets attached 0.0's buffer)
+	# ----------------------------------------------------
+	XU_bags{
+		directionWriteOrRead	= "false";
+		HostDoWrite				= "false";
+		HostDoRead				= "false";
+		memAccessFlag			= "CL_MEM_READ_WRITE";
+		baseTypeSize			= "0";
+		baseTypeMultiple		= "1";
+		baseTypeXDimMultiple	= "0";
+		baseTypeYDimMultiple	= "0";
+		deviceMultiple			= "false";
+		isGlobalMemory			= "true";
+		isConstantMemory		= "false";
+		isLocalMemory			= "false";
+		isRangeScalable			= "true";
+		isNewOrResident			= "false";
+		residentFuncIdx			= "0";
+		residentFuncArgIdx		= "0";
+		requiresSubBuffering	= "true";
+		equalSubBufferSizes		= "false";
+	}
+
+	# argument 1.1: V (gets attached a new buffer)
+	# ----------------------------------------------------
+	V{
+		directionWriteOrRead	= "false";
+		HostDoWrite				= "false";
+		HostDoRead				= "false";
+		memAccessFlag			= "CL_MEM_READ_WRITE";
+		baseTypeSize			= "0";
+		baseTypeMultiple		= "1";
+		baseTypeXDimMultiple	= "0";
+		baseTypeYDimMultiple	= "0";
+		deviceMultiple			= "false";
+		isGlobalMemory			= "true";
+		isConstantMemory		= "false";
+		isLocalMemory			= "false";
+		isRangeScalable			= "false";
+		isNewOrResident			= "true";
+		residentFuncIdx			= "-1";
+		residentFuncArgIdx		= "-1";
+		requiresSubBuffering	= "false";
+		equalSubBufferSizes		= "false";
+	}	
+}
+
+# function: 2- collect
+# -----------------------
+collect{ 
+
+	# argument 2.0: RW_bag (gets attached 0.0's buffer)
+	# ----------------------------------------------------
+	XU_bags{
+		directionWriteOrRead	= "false";
+		HostDoWrite				= "false";
+		HostDoRead				= "false";
+		memAccessFlag			= "CL_MEM_READ_WRITE";
+		baseTypeSize			= "0";
+		baseTypeMultiple		= "1";
+		baseTypeXDimMultiple	= "0";
+		baseTypeYDimMultiple	= "0";
+		deviceMultiple			= "false";
+		isGlobalMemory			= "true";
+		isConstantMemory		= "false";
+		isLocalMemory			= "false";
+		isRangeScalable			= "true";
+		isNewOrResident			= "false";
+		residentFuncIdx			= "0";
+		residentFuncArgIdx		= "0";
+		requiresSubBuffering	= "false";
+		equalSubBufferSizes		= "false";
+	}
+
+	# argument 2.1: V (gets attached 1.1's buffer)
+	# ----------------------------------------------------
+	V{
+		directionWriteOrRead	= "false";
+		HostDoWrite				= "false";
+		HostDoRead				= "false";
+		memAccessFlag			= "CL_MEM_READ_WRITE";
+		baseTypeSize			= "0";
+		baseTypeMultiple		= "1";
+		baseTypeXDimMultiple	= "0";
+		baseTypeYDimMultiple	= "0";
+		deviceMultiple			= "false";
+		isGlobalMemory			= "true";
+		isConstantMemory		= "false";
+		isLocalMemory			= "false";
+		isRangeScalable			= "false";
+		isNewOrResident			= "false";
+		residentFuncIdx			= "1";
+		residentFuncArgIdx		= "1";
+		requiresSubBuffering	= "true";
+		equalSubBufferSizes		= "false";
+	}	
+}
