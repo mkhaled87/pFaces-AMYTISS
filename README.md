@@ -19,7 +19,7 @@ You first need to have have [pFaces](http://www.parallall.com/pfaces) installed 
 pfaces -CGH -l
 ```
 
-where **pfaces** (or **pfaces.exe** in Windows) is the location of pFaces' binary file as installed in your machine. This should list all available HW configurations attached to your machine and means you are ready to work with AMYTISS.
+where **pfaces** calls pFaces launcher as installed in your machine. This should list all available HW configurations attached to your machine and means you are ready to work with AMYTISS.
 
 AMYTISS is given as source code that need to be built once. This requires a modern C/C++ compiler such as:
 
@@ -71,7 +71,7 @@ Say you navigated to the example in [/examples/ex_toy_safety](/examples/ex_toy_s
 pfaces -CGH -d 1 -k amytiss@../../kernel-pack -cfg toy2d.cfg -p
 ```
 
-where **pfaces** (or **pfaces.exe** in Windows)  is the binary file of pFaces, "-CGH -d 1" asks pFaces to run AMYTISS in the first device of all avaialble deveices, "-k amytiss@../../kernel-pack" tells pFaces about AMYTISS and where it is located, "-cfg toy2d.cfg" asks pFaces to hand the configuration file to AMYTISS, and "-p" asks pFaces to collect profiling information. Make sure to replace each / with \ in case you are using Windows command line.
+where **pfaces** calls pFaces launcher, "-CGH -d 1" asks pFaces to run AMYTISS in the first device of all avaialble deveices, "-k amytiss@../../kernel-pack" tells pFaces about AMYTISS and where it is located, "-cfg toy2d.cfg" asks pFaces to hand the configuration file to AMYTISS, and "-p" asks pFaces to collect profiling information. Make sure to replace each / with \ in case you are using Windows command line.
 
 ### **Building your own example**
 
