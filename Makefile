@@ -15,6 +15,8 @@ clean:
 	rm -f ./kernel-pack/*.ilk
 	rm -f ./kernel-pack/*.lib
 	rm -f ./kernel-pack/*.pdb
+	rm -f ./kernel-pack/*.ipdb
+	rm -f ./kernel-pack/*.iobj
 	find . -name "*.raw" -type f -delete
 	for dir in $(SUBDIRS); do $(MAKE) clean -C $$dir $@; done
 
