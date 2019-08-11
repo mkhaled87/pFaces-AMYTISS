@@ -44,14 +44,12 @@ If you will be using Linux or MacOS, assuming you have a GIT client, simply run 
 
 ```
 $ git clone --depth=1 https://github.com/mkhaled87/pFaces-AMYTISS
-
 ```
 
 AMYTISS requires to link with pFaces SDK. The environment variable **PFACES_SDK_ROOT** should point to pFaces SDK root directory. Make sure you have the environment variable **PFACES_SDK_ROOT** pointing to the full absolute pFaces SDK forlder. If not, do it as follows:
 
 ```
 $ export PFACES_SDK_ROOT=/full/path/to/pfaces-sdk
-
 ```
 
 Now navigate to the created repo folder and build AMYTISS:

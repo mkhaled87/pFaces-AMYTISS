@@ -29,7 +29,7 @@ endif
 pull:
 	git pull
 	
-push: pull
+push: pull clean
 	git add -A .
 	git commit -m"Automated commit from the Makeflle"
 	git push
