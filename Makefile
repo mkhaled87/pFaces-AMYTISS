@@ -23,7 +23,7 @@ clean:
 
 check-pfaces-sdk:
 ifndef PFACES_SDK_ROOT
-	$(error Are you sure you installed pFaces ? PFACES_SDK_ROOT is not defined.)
+	$(PFACES_SDK_ROOT was not found. Please assign PFACES_SDK_ROOT to the root directory of pFaces SDK.)
 endif
 
 pull:
