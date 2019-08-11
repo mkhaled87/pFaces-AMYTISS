@@ -1,6 +1,6 @@
 SUBDIRS = kernel
 
-.PHONY: all clean
+.PHONY: all clean push pull
 
 all: check-pfaces-sdk
 	for dir in $(SUBDIRS); do $(MAKE) all -C $$dir $@; done
@@ -25,4 +25,14 @@ check-pfaces-sdk:
 ifndef PFACES_SDK_ROOT
 	$(error Are you sure you installed pFaces ? PFACES_SDK_ROOT is not defined.)
 endif
+
+pull:
+	git pull
+	
+push: pull
+	git add -A .
+	git commit -m"Automated commit from the Makeflle"
+	git push
+
+
 	
