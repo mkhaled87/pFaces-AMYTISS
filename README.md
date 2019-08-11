@@ -59,7 +59,6 @@ Now navigate to the created repo folder and build AMYTISS:
 ```
 $ cd amytiss
 $ make
-
 ```
 
 ## **Getting Started**
@@ -117,10 +116,6 @@ Each configuration file corresponds to a case describing a stochastic system and
     - **avoid_hyperrect** in case type="raech", this comma-separated list of lower/upper values for each component of the states.dim components describes the avoid set.
     - **time_steps**: the time bound $T_d$ to satisfy the specifictions
 
-
-## **Built With**
-
-- [pFaces](http://www.parallall.com/pfaces) - An acceleration Ecosystem
 
 ## **Authors**
 
