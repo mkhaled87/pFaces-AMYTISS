@@ -11,9 +11,13 @@ AMYTISS is used to:
 
 In AMYTISS, scalable parallel algorithms are designed to construct finite MDPs and to synthesize their controllers. They are implemented on top of pFaces as a kernel that supports parallel execution within CPUs, GPUs and hardware accelerators (HWAs). 
 
-## **Prerequisites and Building**
+# **Installation**
 
-You first need to have have [pFaces](http://www.parallall.com/pfaces) installed and working. Test the installation of pFaces and make sure it recognizes the parallel hardware in your machine by using the command.
+## **Prerequisites**
+
+### pFaces
+
+You first need to have have [pFaces](http://www.parallall.com/pfaces) installed and working. Test the installation of pFaces and make sure it recognizes the parallel hardware in your machine by running the following command:
 
 ```
 pfaces -CGH -l
@@ -21,12 +25,20 @@ pfaces -CGH -l
 
 where **pfaces** calls pFaces launcher as installed in your machine. This should list all available HW configurations attached to your machine and means you are ready to work with AMYTISS.
 
-AMYTISS is given as source code that need to be built once. This requires a modern C/C++ compiler such as:
+```
+pfaces -CGH -l
+```
 
-- For windows: Microsoft Visual Studio 2019 or later;
+### Build tools
+
+AMYTISS is given as source code that need to be built one time. This requires a modern C/C++ compiler such as:
+
+- For windows: Microsoft Visual Studio (2019 is recommended);
 - For Linu/MacOS: GCC/G++.
 
-If you will be using Windows, open the provided project file [amytiss-kernel.sln](amytiss-kernel.sln) from inside Visual Studio and build it using the Release configuration. Building with Debug configuration will result in a slower operation and requires having the debug binaries of pFaces.
+## **Building AMYTISS**
+
+If you will be using Windows, open the provided project file [amytiss-kernel.sln](amytiss-kernel.sln) from inside Visual Studio and build it using the **Release (x64)** configuration. Building with Debug configuration will result in a slower operation and requires having the debug binaries of pFaces.
 
 If you will be using Linux or MacOS, assuming you have a GIT client, simply run the following command to clone this repo:
 
@@ -35,7 +47,7 @@ $ git clone --depth=1 https://github.com/mkhaled87/pFaces-AMYTISS
 
 ```
 
-Make sure you have the environment variable **PFACES_SDK_ROOT** pointing to the full absolute pFaces SDK forlder. If not, do it as follows:
+AMYTISS requires to link with pFaces SDK. The environment variable **PFACES_SDK_ROOT** should point to pFaces SDK root directory. Make sure you have the environment variable **PFACES_SDK_ROOT** pointing to the full absolute pFaces SDK forlder. If not, do it as follows:
 
 ```
 $ export PFACES_SDK_ROOT=/full/path/to/pfaces-sdk
