@@ -38,7 +38,7 @@ AMYTISS is given as source code that need to be built one time. This requires a 
 
 ## **Building AMYTISS**
 
-If you will be using Windows, open the provided project file [amytiss-kernel.sln](amytiss-kernel.sln) from inside Visual Studio and build it using the **Release (x64)** configuration. Building with Debug configuration will result in a slower operation and requires having the debug binaries of pFaces.
+If you will be using Windows, open the provided VisualStudio-solution file [pFaces-AMYTISS.sln](pFaces-AMYTISS.sln) and build it using the **Release (x64)** configuration. Building with Debug configuration will result in a slower operation and requires having the debug binaries of pFaces.
 
 If you will be using Linux or MacOS, assuming you have a GIT client, simply run the following command to clone this repo:
 
