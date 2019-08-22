@@ -44,6 +44,7 @@ namespace amytiss{
 	#define AMYTISS_KERNEL_FUNC_COLLECT_ARG_V_NAME "V"
 
 	/* The kernel variable patameters to be updated before compilation */
+	#define AMYTISS_KERNEL_PARAM_EXTRA_INC_FILES "@@EXTRA_INC_FILES@@"
 	#define AMYTISS_KERNEL_PARAM_CONCRETE_DATA_TYPE "@@CONCRETE_DATA_TYPE@@"
 	#define AMYTISS_KERNEL_PARAM_SYMBOLIC_DATA_TYPE "@@SYMBOLIC_DATA_TYPE@@"
 	#define AMYTISS_KERNEL_PARAM_SSDIM "@@SSDIM@@"
@@ -89,7 +90,8 @@ namespace amytiss{
 
 
 	/* the keys of the configuration parameters in the configuation file */
-	#define AMYTISS_CONFIG_PARAM_project_name	"project_name"
+	#define AMYTISS_CONFIG_PARAM_project_name	"project_name"	
+	#define AMYTISS_CONFIG_PARAM_include_files	"include_files"
 	#define AMYTISS_CONFIG_PARAM_data	"data"
 	#define AMYTISS_CONFIG_PARAM_save_transitions	"save_transitions"
 	#define AMYTISS_CONFIG_PARAM_save_controller	"save_controller"
@@ -225,6 +227,8 @@ namespace amytiss{
 		size_t time_steps;
 		bool saveP;	
 		bool saveC;
+
+		std::string extra_inc_dir;
 	
 	
 

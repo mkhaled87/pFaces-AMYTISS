@@ -12,6 +12,8 @@
 #define HWA_VERSION
 #include "pfaces.cl"
 
+@@EXTRA_INC_FILES@@
+
 // pfaces-Including some functions for quantization
 @pfaces-include:"amytiss_quantizer.cl"
 
