@@ -14,6 +14,7 @@
 #-----------------------------------------------------------------------
 # (Project name) is essential. It will be used for names of output files.
 project_name = "empty_project";
+include_files = "";
 
 #-----------------------------------------------------------------------
 # Output Memory Model

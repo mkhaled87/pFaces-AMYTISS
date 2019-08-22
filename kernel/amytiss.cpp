@@ -872,7 +872,35 @@ namespace amytiss{
 		paramvals.push_back(pfacesUtils::vector2string(wSpacePerDimWidth));
 
 
+		// Extra include files
+		std::string extra_inc_files = m_spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_include_files);
+		std::string rep_inc_files;
+		extra_inc_dir = "";
+		if (!extra_inc_files.empty()) {
+			std::stringstream ss_rep_inc_files;
+			std::string CFG_DIR = pfacesFileIO::getFileDirectoryPath(m_spCfg->getConfigFilePath());
+			std::vector<std::string> file_names = pfacesUtils::strSplit(extra_inc_files, ";", false);
+			for (size_t i = 0; i < file_names.size(); i++) {
+				string expanded_file_names = file_names[i];
+				expanded_file_names = pfacesUtils::strReplaceAll(expanded_file_names, ".\\", CFG_DIR);
+				expanded_file_names = pfacesUtils::strReplaceAll(expanded_file_names, "./", CFG_DIR);
+				if (!pfacesFileIO::isFileExist(expanded_file_names)) {
+					pfacesTerminal::showWarnMessage(std::string("The exxtra include file: ") + expanded_file_names +
+						std::string(" is ignored since it does not exist."));
+					continue;
+				}
+				std::string file_dir = pfacesFileIO::getFileDirectoryPath(expanded_file_names);
+				extra_inc_dir += std::string(" -I") + file_dir;
 
+				file_names[i] = pfacesUtils::strReplaceAll(expanded_file_names, file_dir, "");
+				file_names[i] = pfacesUtils::strReplaceAll(file_names[i], "\\", "");
+				file_names[i] = pfacesUtils::strReplaceAll(file_names[i], "/", "");
+				ss_rep_inc_files << "#include \"" << file_names[i] << "\"" << std::endl;
+			}
+			rep_inc_files = ss_rep_inc_files.str();
+		}
+		params.push_back(AMYTISS_KERNEL_PARAM_EXTRA_INC_FILES);
+		paramvals.push_back(rep_inc_files);
 
 
 		// updating the list of params
@@ -1269,7 +1297,6 @@ namespace amytiss{
 		instrList.push_back(instrSyncPoint);
 
 
-
 		// ---------------------------------------------------------
 		// Finalize !
 		// ---------------------------------------------------------
@@ -1280,6 +1307,9 @@ namespace amytiss{
 		parallelProgram.m_Process_offsetNDRange = ndProcessOffsetXU;
 		parallelProgram.m_dataPool = dataPool;
 		parallelProgram.m_spInstructionList = instrList;
+		if(!extra_inc_dir.empty())
+			parallelProgram.m_oclOptions += extra_inc_dir;
+
 
 
 		// register a pre/post-execute instruction to save the data
