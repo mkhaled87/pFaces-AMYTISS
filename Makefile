@@ -22,9 +22,10 @@ clean:
 
 
 check-pfaces-sdk:
-ifndef PFACES_SDK_ROOT
-	$(PFACES_SDK_ROOT was not found. Please assign PFACES_SDK_ROOT to the root directory of pFaces SDK.)
+ifeq ($(PFACES_SDK_ROOT),)
+	$(error PFACES_SDK_ROOT was not found. Please assign PFACES_SDK_ROOT to the root directory of pFaces SDK)
 endif
+
 
 pull:
 	git pull
