@@ -100,13 +100,13 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;KERNEL_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>%PFACES_SDK_ROOT%\include;C:\Program Files (x86)\AMD APP SDK\3.0\include;..\..\..\lib\symboliccpp\include;..\..\..\lib\bigint;..\..\..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%PFACES_SDK_ROOT%\include;%PFACES_OCL_INC_PATH%;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>%PFACES_SDK_ROOT%\lib;C:\Program Files (x86)\AMD APP SDK\3.0\lib\x86</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>%PFACES_SDK_ROOT%\lib;%PFACES_OCL_LIB_PATH_32b%</AdditionalLibraryDirectories>
       <AdditionalDependencies>pfaces-sdk-dbg.lib;OpenCL.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -123,13 +123,13 @@ DEL $(TargetDir)$(TargetFileName)</Command>
       <PreprocessorDefinitions>_DEBUG;KERNEL_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>%PFACES_SDK_ROOT%\include;C:\Program Files (x86)\AMD APP SDK\3.0\include;..\..\..\lib\symboliccpp\include;..\..\..\lib\bigint;..\..\..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%PFACES_SDK_ROOT%\include;%PFACES_OCL_INC_PATH%;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>%PFACES_SDK_ROOT%\lib;C:\Program Files (x86)\AMD APP SDK\3.0\lib\x86_64</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>%PFACES_SDK_ROOT%\lib;%PFACES_OCL_LIB_PATH_64b%</AdditionalLibraryDirectories>
       <AdditionalDependencies>pfaces-sdk-dbg.lib;OpenCL.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -148,7 +148,7 @@ DEL $(TargetDir)$(TargetFileName)</Command>
       <PreprocessorDefinitions>WIN32;NDEBUG;KERNEL_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>%PFACES_SDK_ROOT%\include;C:\Program Files (x86)\AMD APP SDK\3.0\include;..\..\..\lib\symboliccpp\include;..\..\..\lib\bigint;..\..\..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%PFACES_SDK_ROOT%\include;%PFACES_OCL_INC_PATH%;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -156,7 +156,7 @@ DEL $(TargetDir)$(TargetFileName)</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>%PFACES_SDK_ROOT%\lib;C:\Program Files (x86)\AMD APP SDK\3.0\lib\x86</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>%PFACES_SDK_ROOT%\lib;%PFACES_OCL_LIB_PATH_32b%</AdditionalLibraryDirectories>
       <AdditionalDependencies>pfaces-sdk.lib;OpenCL.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -175,7 +175,7 @@ DEL $(TargetDir)$(TargetFileName)</Command>
       <PreprocessorDefinitions>NDEBUG;KERNEL_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>%PFACES_SDK_ROOT%\include;C:\Program Files (x86)\AMD APP SDK\3.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%PFACES_SDK_ROOT%\include;%PFACES_OCL_INC_PATH%;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -183,7 +183,7 @@ DEL $(TargetDir)$(TargetFileName)</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>%PFACES_SDK_ROOT%\lib;C:\Program Files (x86)\AMD APP SDK\3.0\lib\x86_64</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>%PFACES_SDK_ROOT%\lib;%PFACES_OCL_LIB_PATH_64b%</AdditionalLibraryDirectories>
       <AdditionalDependencies>pfaces-sdk.lib;OpenCL.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
