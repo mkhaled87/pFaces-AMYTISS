@@ -1,4 +1,4 @@
-SET OPTIONS=-CGH -d 1 -p
+SET OPTIONS=-CG -d 1 -p
 pfaces -k amytiss.cpu@..\..\kernel-pack -cfg stochy2.cfg %OPTIONS% > stochy2_run.txt
 pfaces -k amytiss.cpu@..\..\kernel-pack -cfg stochy3.cfg %OPTIONS% > stochy3_run.txt
 pfaces -k amytiss.cpu@..\..\kernel-pack -cfg stochy4.cfg %OPTIONS% > stochy4_run.txt
