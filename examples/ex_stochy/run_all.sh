@@ -1,4 +1,4 @@
-OPTIONS="-CGH -d 3 -p"
+OPTIONS="-CG -d 1 -p"
 echo $OPTIONS
 pfaces -k amytiss.cpu@../../kernel-pack -cfg stochy2.cfg $OPTIONS | tee stochy2_run.txt
 pfaces -k amytiss.cpu@../../kernel-pack -cfg stochy3.cfg $OPTIONS | tee stochy3_run.txt
