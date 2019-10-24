@@ -119,6 +119,7 @@ Each configuration file corresponds to a case describing a stochastic system and
 
 - [**Mahmoud Khaled**](http://www.mahmoud-khaled.com)*.
 - [**Abolfazl Lavaei**](http://www.hyconsys.com/members/lavaei)*.
+- [**Sadegh Soudjani**](http://homepages.cs.ncl.ac.uk/sadegh.soudjani/).
 - [**Majid Zamani**](http://www.hyconsys.com/members/mzamani).
 
 *: Both authors have the same contribution.
