@@ -53,6 +53,9 @@ namespace amytiss{
 		return biMaxIdx;
 	}
 
+	// --------------------------------------------------------------------
+	// TODO: update this to use amytissGetPdfAsCFunctionBody from the PDF class. Note: no "return" in the class version !
+	// --------------------------------------------------------------------
 	/* this functin reutens the pdf as string by doing some symbolic operations */
 	std::string amytissGetPdfAsCFunctionBody(size_t ssDim, concrete_t detSigma) {
 
@@ -74,6 +77,9 @@ namespace amytiss{
 		return strRet;
 	}
 
+	// --------------------------------------------------------------------
+	// TODO: remove this and use getAdditionalDefines from the PDF class
+	// --------------------------------------------------------------------
 	/*this function generates the ing-sigma matrix as a set of defines */
 	std::string amytissGetInvSigmaDefines(size_t ssDim, const std::vector<std::vector<concrete_t>>& sigmaInv) {
 		std::stringstream ssE;
@@ -90,6 +96,9 @@ namespace amytiss{
 		return strRet;
 	}
 
+	// --------------------------------------------------------------------
+	// TODO: remove this as it is only used for the normal distro
+	// --------------------------------------------------------------------
 	/* these functions gets the cutting bounds based on the cuttung probabilities */
 	/* since we are dealing with symmetrix normal distribution, we give the cutting bound as the distance from the origin */
 	std::vector<concrete_t> amytissGetPositiveZeroOriginatedCuttingBounds(size_t ssDim, 
@@ -121,6 +130,10 @@ namespace amytiss{
 
 		return ret;
 	}
+
+	// --------------------------------------------------------------------
+	// TODO: remove this as it is only used for the normal distro. use instead the one from the PDF object
+	// --------------------------------------------------------------------	
 	std::pair<std::vector<concrete_t>, std::vector<concrete_t>>
 	amytissGetOriginatedCuttingBound(
 		const std::vector<concrete_t>& originatedCuttingBounds,
@@ -148,6 +161,9 @@ namespace amytiss{
 
 		return std::make_pair(cuttingBoundsLb, cuttingBoundsUb);
 	}
+
+
+	
 	std::string amytissGetCuttingBoundsDefines_cuttingProbability(size_t ssDim,
 		const std::vector<concrete_t>& ssEta, const std::vector<concrete_t>& ssLb, const std::vector<concrete_t>& ssUb,
 		const std::vector<concrete_t>& wsLb, const std::vector<concrete_t>& wsUb,
