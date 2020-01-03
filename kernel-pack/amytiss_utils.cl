@@ -160,16 +160,8 @@ void post_dynamics(concrete_t* xx, const concrete_t* x, const concrete_t* u, con
 	@@POST_DYNAMICS_CODE_AFTER@@
 }
 
-/* the inverse of the covariance matrix as a constant defines */
-@@INV_COVAR_MATRIX@@
-
-/* the bounds on X for the PDF function */
-@@PDF_BOUNDS@@
-
-/* based on the cutting bounds and the quantization of the state space */
-/* the following value is computed as the number of reachable states with*/
-/* probability>cutting_prob in the hyper-rectangle: [-CUTTING_BOUND CUTTING_BOUND] */
-#define NUM_REACH_STATES @@NUM_REACH_STATES@@
+/* Defines for the PDF: the bounds of cutting region +  */
+@@PDF_DEFINES@@
 
 /* numer of time steps to solve the synthesis */
 #define TIME_STEPS @@TIME_STEPS@@

@@ -7,243 +7,7 @@
 #include "amytiss.h"
 #include <symbolicc++.h>
 
-/* some global defines */
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 namespace amytiss{
-
-	/*********************************************************/
-	// Some function to prepare some stuff for the kernel
-	/*********************************************************/
-	/* this computes the cardinality of the concrete space after quantized with some eta */
-	flat_t
-	amytissGetFlatWidthFromConcreteSpace(
-		size_t Dim,
-		const std::vector<concrete_t>& Eta,
-		const std::vector<concrete_t>& Lb,
-		const std::vector<concrete_t>& Ub,
-		const std::vector<concrete_t>& Err,
-		std::vector<symbolic_t>& outWidthPerDimension
-	) {
-
-		// a zero-dim space is a singleton set !
-		if (Dim == 0) {
-			outWidthPerDimension.push_back(1);
-			flat_t ret = 1;
-			return ret;
-		}
-
-		if (Dim != Eta.size() || Dim != Lb.size() || Dim != Ub.size())
-			throw std::runtime_error("Invalid sizes/dimensions for Concrete space !");
-
-		if (Err.size() != 0 && Dim != Err.size())
-			throw std::runtime_error("Invalid dimension for the error parameters of the space !");
-
-		flat_t biMaxIdx = 1;
-		for (size_t i = 0; i < Dim; i++) {
-			symbolic_t width = ((symbolic_t)std::round((Ub[i]-Lb[i])/Eta[i])) + 1;
-			outWidthPerDimension.push_back(width);
-
-			flat_t tmp((unsigned long int)width);
-			biMaxIdx = biMaxIdx * tmp;
-		}
-
-		return biMaxIdx;
-	}
-
-	// --------------------------------------------------------------------
-	// TODO: update this to use amytissGetPdfAsCFunctionBody from the PDF class. Note: no "return" in the class version !
-	// --------------------------------------------------------------------
-	/* this functin reutens the pdf as string by doing some symbolic operations */
-	std::string amytissGetPdfAsCFunctionBody(size_t ssDim, concrete_t detSigma) {
-
-		// required symbic vectors/matricies
-		Symbolic x("x", ssDim);
-		Symbolic Mu("Mu", ssDim);
-		Symbolic SigmaInv("SigmaInv", ssDim, ssDim);
-
-		// e = -0.5*(x-Mu)'*inv(Sigma)*(x-Mu)
-		Symbolic xMinusMu = x - Mu;
-		Symbolic e = -0.5 * xMinusMu.transpose() * SigmaInv * xMinusMu;
-		concrete_t val = 1.0l / std::sqrt(std::pow(2.0l * M_PI, ssDim) * detSigma);
-
-		// the pdf as a strings	
-		std::stringstream ssE;
-		ssE << "return "  << val << "*exp((float)(" << e << "));";
-		std::string strRet = ssE.str();
-
-		return strRet;
-	}
-
-	// --------------------------------------------------------------------
-	// TODO: remove this and use getAdditionalDefines from the PDF class
-	// --------------------------------------------------------------------
-	/*this function generates the ing-sigma matrix as a set of defines */
-	std::string amytissGetInvSigmaDefines(size_t ssDim, const std::vector<std::vector<concrete_t>>& sigmaInv) {
-		std::stringstream ssE;
-
-		// representing the inv-sigma mateix a a set of defines
-		for (size_t i = 0; i < ssDim; i++)
-			for (size_t j = 0; j < ssDim; j++)
-				ssE << "#define SigmaInv_" << i << "_" << j << " " << std::fixed << sigmaInv[i][j] << std::endl;
-
-		// a general rule to make inv-sigma as a function
-		ssE << "#define SigmaInv(I,J) SigmaInv_##I##_##J" << std::endl;
-
-		std::string strRet = ssE.str();
-		return strRet;
-	}
-
-	// --------------------------------------------------------------------
-	// TODO: remove this as it is only used for the normal distro
-	// --------------------------------------------------------------------
-	/* these functions gets the cutting bounds based on the cuttung probabilities */
-	/* since we are dealing with symmetrix normal distribution, we give the cutting bound as the distance from the origin */
-	std::vector<concrete_t> amytissGetPositiveZeroOriginatedCuttingBounds(size_t ssDim, 
-		const std::vector<concrete_t>& ssEta, const std::vector<concrete_t>& ssLb, const std::vector<concrete_t>& ssUb,
-		const std::vector<std::vector<concrete_t>>& sigmaInv,
-		concrete_t detSigma, concrete_t cuttingProbability) {
-
-		std::vector<concrete_t> ret;
-
-		if(cuttingProbability == 0){
-			for (size_t i = 0; i < ssDim; i++)
-				ret.push_back(ssUb[i]);
-
-			return ret;
-		}
-
-		concrete_t val = 1.0l / std::sqrt(std::pow(2.0l * M_PI, ssDim) * detSigma);
-		concrete_t logVal = (-2 * std::log(cuttingProbability / val));
-
-		if (logVal < 0.0)
-			throw std::runtime_error("amytissGetPositiveZeroOriginatedCuttingBounds: Invalid value for the cutting-probability. Are you setting a cutting prbability above the PDF max value ?");
-
-		for (size_t i = 0; i < ssDim; i++) {
-			concrete_t val = std::sqrt(logVal / sigmaInv[i][i]);
-			concrete_t valAligned = pfacesFlatSpace::alignValueToQuantizationGrid(val, ssEta[i], ssLb[i], ssUb[i]);
-	
-			ret.push_back(valAligned);	
-		}
-
-		return ret;
-	}
-
-	// --------------------------------------------------------------------
-	// TODO: remove this as it is only used for the normal distro. use instead the one from the PDF object
-	// --------------------------------------------------------------------	
-	std::pair<std::vector<concrete_t>, std::vector<concrete_t>>
-	amytissGetOriginatedCuttingBound(
-		const std::vector<concrete_t>& originatedCuttingBounds,
-		const std::vector<concrete_t>& ssEta, const std::vector<concrete_t>& ssLb, const std::vector<concrete_t>& ssUb,
-		const std::vector<concrete_t>& wsLb, const std::vector<concrete_t>& wsUb
-	) {
-		(void)wsLb;
-		std::vector<concrete_t> cuttingBoundsLb, cuttingBoundsUb;
-
-		// the max-ub in the distrurbance set
-		concrete_t max_w_ub = pfacesUtils::vectorGetMax(wsUb);
-		concrete_t min_w_lb = pfacesUtils::vectorGetMin(wsLb);
-
-		// assing the bounds including inflation from the disturbances
-		for (size_t i = 0; i < originatedCuttingBounds.size(); i++) {
-			concrete_t valAlignedUb = pfacesFlatSpace::alignValueToQuantizationGrid(
-				originatedCuttingBounds[i] + max_w_ub, ssEta[i], ssLb[i], ssUb[i]);
-
-			concrete_t valAlignedLb = pfacesFlatSpace::alignValueToQuantizationGrid(
-				-1*originatedCuttingBounds[i] + min_w_lb, ssEta[i], ssLb[i], ssUb[i]);
-
-			cuttingBoundsLb.push_back(valAlignedLb);
-			cuttingBoundsUb.push_back(valAlignedUb);
-		}
-
-		return std::make_pair(cuttingBoundsLb, cuttingBoundsUb);
-	}
-
-
-	
-	std::string amytissGetCuttingBoundsDefines_cuttingProbability(size_t ssDim,
-		const std::vector<concrete_t>& ssEta, const std::vector<concrete_t>& ssLb, const std::vector<concrete_t>& ssUb,
-		const std::vector<concrete_t>& wsLb, const std::vector<concrete_t>& wsUb,
-		const std::vector<std::vector<concrete_t>>& sigmaInv,
-		concrete_t detSigma, concrete_t cuttingProbability) {
-
-
-		std::vector<concrete_t> cuttingBoundsLb, cuttingBoundsUb;
-		std::stringstream ssE;
-
-		// get the originated (centered at 0) cutting bound that does not consider the effect of W on the dynamics
-		std::vector<concrete_t> positiveCuttingBounds = 
-			amytissGetPositiveZeroOriginatedCuttingBounds(ssDim, ssEta, ssLb, ssUb,
-			sigmaInv, detSigma, cuttingProbability);
-	
-
-		// assigning the ub/lb of the cutting bound and taking the inflation of the disturbance into account
-		auto pair = amytissGetOriginatedCuttingBound(positiveCuttingBounds, ssEta, ssLb, ssUb, wsLb, wsUb);
-		cuttingBoundsLb = pair.first;
-		cuttingBoundsUb = pair.second;
-	
-		ssE << "#define CUTTING_BOUND_INCLUDING_W_EFFECT_LB {";
-		ssE << pfacesUtils::vector2string(cuttingBoundsLb);
-		ssE << "}" << std::endl;
-
-		ssE << "#define CUTTING_BOUND_INCLUDING_W_EFFECT_UB {";
-		ssE << pfacesUtils::vector2string(cuttingBoundsUb);
-		ssE << "}" << std::endl;
-
-
-		// number of elements + widths of the region
-		std::vector<symbolic_t> contaningCuttingRegionWidths;
-		symbolic_t num_symbols_containing_region =
-			pfacesBigInt::getPrimitiveValue(amytissGetFlatWidthFromConcreteSpace(ssDim, ssEta,
-				cuttingBoundsLb, cuttingBoundsUb, {}, contaningCuttingRegionWidths));
-		ssE << "#define CONTAINING_REGION_WIDTHS {" << pfacesUtils::vector2string(contaningCuttingRegionWidths) << "}" << std::endl;
-		ssE << "#define NUM_SYMBOLS_CONTAINING_REGION " << num_symbols_containing_region << std::endl;
-
-	
-
-		std::string strRet = ssE.str();
-		return strRet;
-	}
-	std::string amytissGetCuttingBoundsDefines_providedRegion(size_t ssDim,
-		const std::vector<concrete_t>& ssEta,
-		const std::vector<concrete_t>& Lb, const std::vector<concrete_t>& Ub) {
-
-
-		std::stringstream ssE;
-
-		if (Lb.size() != Ub.size() && Ub.size() != ssDim)
-			throw std::runtime_error("amytissGetCuttingBoundsDefines_providedRegion: Size mismatch in Lb/Ub !");
-
-		for (size_t i = 0; i < ssDim; i++)
-			if(Lb[i] != -1.0*Ub[i])
-				throw std::runtime_error("amytissGetCuttingBoundsDefines_providedRegion: the probided cutting region is not symmetric around the origin !");
-
-		ssE << "#define CUTTING_BOUND_INCLUDING_W_EFFECT_LB {";
-		ssE << pfacesUtils::vector2string(Lb);
-		ssE << "}" << std::endl;
-
-		ssE << "#define CUTTING_BOUND_INCLUDING_W_EFFECT_UB {";
-		ssE << pfacesUtils::vector2string(Ub);
-		ssE << "}" << std::endl;
-
-
-		// number of elements + widths of the region
-		std::vector<symbolic_t> contaningCuttingRegionWidths;
-		symbolic_t num_symbols_containing_region =
-			pfacesBigInt::getPrimitiveValue(amytissGetFlatWidthFromConcreteSpace(ssDim, ssEta,
-				Lb, Ub, {}, contaningCuttingRegionWidths));
-		ssE << "#define CONTAINING_REGION_WIDTHS {" << pfacesUtils::vector2string(contaningCuttingRegionWidths) << "}" << std::endl;
-		ssE << "#define NUM_SYMBOLS_CONTAINING_REGION " << num_symbols_containing_region << std::endl;
-
-
-
-		std::string strRet = ssE.str();
-		return strRet;
-	}
-
 
 	/*********************************************************/
 	// A pre/post-execcute to save the data
@@ -360,15 +124,10 @@ namespace amytiss{
 			pfacesUtils::vector2string<concrete_t>(thisAmytissKernel->orgCuttingBoundsLb)));
 		metadata.push_back(std::make_pair(OUT_FILE_PARAM_ORG_CUTTING_REGION_UB,
 			pfacesUtils::vector2string<concrete_t>(thisAmytissKernel->orgCuttingBoundsUb)));
-		metadata.push_back(std::make_pair(OUT_FILE_PARAM_INV_COVAR_MATRIX,
-			thisParallelProgram.m_spCfgReader->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_inv_covariance_matrix)));
-		metadata.push_back(std::make_pair(OUT_FILE_PARAM_DET_COVAR_MATRIX,
-			thisParallelProgram.m_spCfgReader->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_det_covariance_matrix)));
-		if(thisAmytissKernel->fixed_cutting_Region_provied)
-			metadata.push_back(std::make_pair(OUT_FILE_PARAM_CUTTING_PROP, "N/A"));
-		else
-			metadata.push_back(std::make_pair(OUT_FILE_PARAM_CUTTING_PROP,
-				thisParallelProgram.m_spCfgReader->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_cutting_probability)));
+
+		// add additional stuff from the pdf object
+		thisAmytissKernel->spPdfObj->addToOutputFileMetadata(metadata);
+		
 		metadata.push_back(std::make_pair(OUT_FILE_PARAM_SPECS_TYPE, specs_type));
 
 		if (specs_type == std::string(AMYTISS_CONFIG_PARAM_specs_type_value_reach)) {
@@ -423,6 +182,104 @@ namespace amytiss{
 	/*********************************************************/
 	// class amytissKernel
 	/*********************************************************/
+	/* this computes the cardinality of the concrete space after quantized with some eta */
+	flat_t amytissGetFlatWidthFromConcreteSpace(size_t Dim,
+		const std::vector<concrete_t>& Eta,
+		const std::vector<concrete_t>& Lb, const std::vector<concrete_t>& Ub,
+		const std::vector<concrete_t>& Err,
+		std::vector<symbolic_t>& outWidthPerDimension) {
+
+		// a zero-dim space is a singleton set !
+		if (Dim == 0) {
+			outWidthPerDimension.push_back(1);
+			flat_t ret = 1;
+			return ret;
+		}
+
+		if (Dim != Eta.size() || Dim != Lb.size() || Dim != Ub.size())
+			throw std::runtime_error("Invalid sizes/dimensions for Concrete space !");
+
+		if (Err.size() != 0 && Dim != Err.size())
+			throw std::runtime_error("Invalid dimension for the error parameters of the space !");
+
+		flat_t biMaxIdx = 1;
+		for (size_t i = 0; i < Dim; i++) {
+			symbolic_t width = ((symbolic_t)std::round((Ub[i]-Lb[i])/Eta[i])) + 1;
+			outWidthPerDimension.push_back(width);
+
+			flat_t tmp((unsigned long int)width);
+			biMaxIdx = biMaxIdx * tmp;
+		}
+
+		return biMaxIdx;
+	}
+
+	/* this functin reutens the pdf as string by doing some symbolic operations */
+	std::string amytissKernel::amytissGetPdfAsCFunctionBody() {
+
+		// the pdf as a strings	
+		std::stringstream ssE;
+		ssE << "return "  << spPdfObj->getPDFBody();
+		std::string strRet = ssE.str();
+		return strRet;
+	}
+
+	// this gets some defines to be used by the pdf
+	std::string amytissKernel::amytissGetPdfDefines() {
+		
+		std::vector<concrete_t> cuttingBoundsLb, cuttingBoundsUb;
+		std::stringstream ssE;
+		
+		auto pair = spPdfObj->getOriginatedCuttingBound();
+		cuttingBoundsLb = pair.first;
+		cuttingBoundsUb = pair.second;
+
+		// the cutting region
+		ssE << "/* the cutting bounds of the PDF */"  << std::endl;
+		ssE << "#define CUTTING_BOUND_INCLUDING_W_EFFECT_LB {";
+		ssE << pfacesUtils::vector2string(cuttingBoundsLb);
+		ssE << "}" << std::endl;
+		ssE << "#define CUTTING_BOUND_INCLUDING_W_EFFECT_UB {";
+		ssE << pfacesUtils::vector2string(cuttingBoundsUb);
+		ssE << "}" << std::endl;
+
+		// number of elements + widths of the region
+		std::vector<symbolic_t> contaningCuttingRegionWidths;
+		symbolic_t num_symbols_containing_region =
+			pfacesBigInt::getPrimitiveValue(amytissGetFlatWidthFromConcreteSpace(ssDim, ssEta,
+				cuttingBoundsLb, cuttingBoundsUb, {}, contaningCuttingRegionWidths));
+		ssE << "/* number of symbols in the cutting region */"  << std::endl;
+		ssE << "#define NUM_REACH_STATES " << num_symbols_containing_region << std::endl;
+		ssE << "#define CONTAINING_REGION_WIDTHS {" << pfacesUtils::vector2string(contaningCuttingRegionWidths) << "}" << std::endl;
+
+		// extra deffines
+		ssE << "/* extra defines requested by the PDF */"  << std::endl;
+		ssE << spPdfObj->getAdditionalDefines();
+
+
+		// some statistics
+		std::vector<symbolic_t> dummy;
+		size_t num_ss_states = pfacesBigInt::getPrimitiveValue(
+			amytissGetFlatWidthFromConcreteSpace(ssDim, ssEta, ssLb, ssUb, {}, dummy)
+		);
+
+		double reduction = 100.0* (1.0 - (double)num_symbols_containing_region /(double)num_ss_states);
+		pfacesTerminal::showMessage(std::string("The org. cutting region (Lb):") + pfacesUtils::vector2string(cuttingBoundsLb));
+		pfacesTerminal::showMessage(std::string("The org. cutting region (Ub):") + pfacesUtils::vector2string(cuttingBoundsUb));
+		pfacesTerminal::showMessage(
+			std::string("Number of reach-states after cutting the probability: ") +
+			std::to_string(num_symbols_containing_region) + std::string(" - ") + std::to_string(std::round(reduction)) + std::string("% reduction.")
+		);
+
+		if (saveP && num_reach_states > 256)
+			pfacesTerminal::showWarnMessage(
+				"Number of expected reach states for each (x,u) exeecds 256."
+				" Please consider not saving the abstraction as the size will probably be large.");		
+
+		std::string strRet = ssE.str();
+		return strRet;
+	}
+
 	/* the constructor: initiate data and prepapre memory maps*/
 	amytissKernel::amytissKernel(const std::shared_ptr<pfacesKernelLaunchState>& spLaunchState, const std::shared_ptr<pfacesConfigurationReader>& spCfg)
 		: pfaces2DKernel(
@@ -519,80 +376,16 @@ namespace amytiss{
 			}
 		}
 
-		// reading and storing the noise information
-		std::vector<concrete_t> tmp_covar_line = pfacesUtils::sStr2Vector<concrete_t>(m_spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_inv_covariance_matrix));
-		if (tmp_covar_line.size() != ssDim * ssDim && tmp_covar_line.size() != ssDim)
-			throw std::runtime_error("amytissKernel::amytissKernel: Inv-covariance-matrix has invalid size !");
-
-		if (tmp_covar_line.size() == ssDim * ssDim) {
-			for (size_t i = 0; i < ssDim; i++) {
-				std::vector<concrete_t> row;
-				for (size_t j = 0; j < ssDim; j++) {
-					row.push_back(tmp_covar_line[i * ssDim + j]);
-				}
-				inv_covar_matrix.push_back(row);
-			}
-		}
-
-		if (tmp_covar_line.size() == ssDim) {
-			for (size_t i = 0; i < ssDim; i++) {
-				std::vector<concrete_t> row;
-				for (size_t j = 0; j < ssDim; j++) {
-					if(i == j)
-						row.push_back(tmp_covar_line[i]);
-					else
-						row.push_back(0.0);
-				}
-				inv_covar_matrix.push_back(row);
-			}
-		}
-
+		// configuration of computation
 		saveP = spCfg->readConfigValueBool(AMYTISS_CONFIG_PARAM_save_transitions);
 		saveC = spCfg->readConfigValueBool(AMYTISS_CONFIG_PARAM_save_controller);
-		det_covar_matrix = m_spCfg->readConfigValueReal(AMYTISS_CONFIG_PARAM_noise_det_covariance_matrix);
-		cutting_probability = m_spCfg->readConfigValueReal(AMYTISS_CONFIG_PARAM_noise_cutting_probability);
-		cutting_region = m_spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_cutting_region);
 		time_steps = (size_t)m_spCfg->readConfigValueInt(AMYTISS_CONFIG_PARAM_specs_time_steps);
-		
-		if (cutting_region != std::string("") && cutting_probability == 0) {
-			fixed_cutting_Region_provied = true;
-			cutting_region = pfacesUtils::strReplaceAll(cutting_region, "{", "");
-			cutting_region = pfacesUtils::strReplaceAll(cutting_region, "}", "");
 
-			std::vector<concrete_t> vals = pfacesUtils::sStr2Vector<concrete_t>(cutting_region);
-			if (vals.size() != ssDim * 2)
-				throw std::runtime_error("Invalid number of elemenmts in the provided fixed cuttinging region.");
 
-			for (size_t i = 0; i < ssDim; i++){
-				fixed_cutting_region_lb.push_back(vals[2 * i + 0]);
-				fixed_cutting_region_ub.push_back(vals[2 * i + 1]);
-			}
-		}
-
-	
-		if (!fixed_cutting_Region_provied) {
-			std::vector<concrete_t> positiveCuttingBounds =
-				amytissGetPositiveZeroOriginatedCuttingBounds(ssDim, ssEta, ssLb, ssUb,
-					inv_covar_matrix, det_covar_matrix, cutting_probability);
-			
-			auto pair = amytissGetOriginatedCuttingBound(positiveCuttingBounds, ssEta, ssLb, ssUb, wsLb, wsUb);
-			
-			orgCuttingBoundsLb = pair.first;
-			orgCuttingBoundsUb = pair.second;
-		}
-		else {
-			orgCuttingBoundsLb = fixed_cutting_region_lb;
-			orgCuttingBoundsUb = fixed_cutting_region_ub;
-		}
-
-	
-		std::vector<symbolic_t> dummy;
-		num_reach_states = pfacesBigInt::getPrimitiveValue(amytissGetFlatWidthFromConcreteSpace(ssDim, ssEta,
-			orgCuttingBoundsLb, orgCuttingBoundsUb, {}, dummy));
-		size_t num_ss_states = pfacesBigInt::getPrimitiveValue(amytissGetFlatWidthFromConcreteSpace(ssDim, ssEta,
-			ssLb, ssUb, {}, dummy));
-
-		double reduction = 100.0* (1.0 - (double)num_reach_states /(double)num_ss_states);
+		// TODO: allow, based on the config from the user, to change the type of the PDF
+		spPdfObj = std::static_pointer_cast<amytissPDF>(
+			std::make_shared<amytissPDF_NormalDistribution>(m_spCfg, ssDim, ssEta, ssLb ,ssUb)
+		);
 
 
 		// TASK1: Updating the params
@@ -608,7 +401,6 @@ namespace amytiss{
 		params.push_back(AMYTISS_KERNEL_PARAM_SYMBOLIC_DATA_TYPE);
 		paramvals.push_back(symbolic_t_cl_string);
 
-
 		/* ss, is, and ws dimensions */
 		params.push_back(AMYTISS_KERNEL_PARAM_SSDIM);
 		paramvals.push_back(std::to_string(ssDim));
@@ -617,7 +409,6 @@ namespace amytiss{
 		params.push_back(AMYTISS_KERNEL_PARAM_WSDIM);
 		paramvals.push_back(std::to_string(singletonDisturbance?1:wsDim));
 
-
 		/* ss, is, and ws bounds/quantizations */
 		params.push_back(AMYTISS_KERNEL_PARAM_SSETA);
 		paramvals.push_back(pfacesUtils::vector2string(ssEta));
@@ -625,21 +416,18 @@ namespace amytiss{
 		paramvals.push_back(pfacesUtils::vector2string(ssLb));
 		params.push_back(AMYTISS_KERNEL_PARAM_SSUB);
 		paramvals.push_back(pfacesUtils::vector2string(ssUb));
-
 		params.push_back(AMYTISS_KERNEL_PARAM_ISETA);
 		paramvals.push_back(pfacesUtils::vector2string(isEta));
 		params.push_back(AMYTISS_KERNEL_PARAM_ISLB);
 		paramvals.push_back(pfacesUtils::vector2string(isLb));
 		params.push_back(AMYTISS_KERNEL_PARAM_ISUB);
 		paramvals.push_back(pfacesUtils::vector2string(isUb));
-
 		params.push_back(AMYTISS_KERNEL_PARAM_WSETA);
 		paramvals.push_back(pfacesUtils::vector2string(wsEta));
 		params.push_back(AMYTISS_KERNEL_PARAM_WSLB);
 		paramvals.push_back(pfacesUtils::vector2string(wsLb));
 		params.push_back(AMYTISS_KERNEL_PARAM_WSUB);
 		paramvals.push_back(pfacesUtils::vector2string(wsUb));
-
 
 		/* save P ? */
 		params.push_back(AMYTISS_KERNEL_PARAM_DEFINE_SAVE_P_MATRIX);
@@ -832,21 +620,14 @@ namespace amytiss{
 		params.push_back(AMYTISS_KERNEL_PARAM_PDF_BASE_VOLUME);
 		paramvals.push_back(std::to_string(pdf_base_volume));
 
+		// noise stuff: 1- defines needed for the pdf
+		params.push_back(AMYTISS_KERNEL_PARAM_PDF_DEFINES);
+		paramvals.push_back(amytissGetPdfDefines());
 
-		// noise stuff
-		pfacesTerminal::showMessage(std::string("Computing the probability distribution function (PDF) symbolically .... "));
+		// noise stuff: 2- the pdf body
 		params.push_back(AMYTISS_KERNEL_PARAM_PDF_FUNCTION_BODY);
-		paramvals.push_back(amytissGetPdfAsCFunctionBody(ssDim, det_covar_matrix));
-		params.push_back(AMYTISS_KERNEL_PARAM_PDF_BOUNDS);
-		if(fixed_cutting_Region_provied)
-			paramvals.push_back(amytissGetCuttingBoundsDefines_providedRegion(ssDim, ssEta, fixed_cutting_region_lb, fixed_cutting_region_ub));
-		else
-			paramvals.push_back(amytissGetCuttingBoundsDefines_cuttingProbability(ssDim, ssEta, ssLb, ssUb, wsLb, wsUb, inv_covar_matrix, det_covar_matrix, cutting_probability));
-		params.push_back(AMYTISS_KERNEL_PARAM_INV_COVAR_MATRIX);
-		paramvals.push_back(amytissGetInvSigmaDefines(ssDim, inv_covar_matrix));
-		params.push_back(AMYTISS_KERNEL_PARAM_NUM_REACH_STATES);
-		paramvals.push_back(std::to_string(num_reach_states));
-
+		paramvals.push_back(amytissGetPdfAsCFunctionBody());
+		
 		// for contrller synthesis, number of steps in time to calc
 		params.push_back(AMYTISS_KERNEL_PARAM_TIME_STEPS);
 		paramvals.push_back(std::to_string(time_steps));
@@ -863,7 +644,6 @@ namespace amytiss{
 		params.push_back(AMYTISS_KERNEL_PARAM_CONTROL_BYTES);
 		paramvals.push_back(std::to_string(num_control_bytes));
 
-
 		// widths and number of symbols of all spaces
 		xSpaceFlatWidth = amytissGetFlatWidthFromConcreteSpace(ssDim, ssEta, ssLb, ssUb, {}, xSpacePerDimWidth);
 		uSpaceFlatWidth = amytissGetFlatWidthFromConcreteSpace(isDim, isEta, isLb, isUb, {}, uSpacePerDimWidth);
@@ -871,7 +651,6 @@ namespace amytiss{
 
 		if (xSpaceFlatWidth.getBlkCount() > 1 || uSpaceFlatWidth.getBlkCount() > 1 || wSpaceFlatWidth.getBlkCount() > 1)
 			throw std::runtime_error("Symbolic spaces with more than 2^64 symbols is not yet supported in AMYTISS.");
-
 
 		params.push_back(AMYTISS_KERNEL_PARAM_SS_NUMSYM);
 		paramvals.push_back(std::to_string(pfacesBigInt::getPrimitiveValue(xSpaceFlatWidth)));
@@ -886,7 +665,6 @@ namespace amytiss{
 		paramvals.push_back(pfacesUtils::vector2string(uSpacePerDimWidth));
 		params.push_back(AMYTISS_KERNEL_PARAM_WS_WIDTHS);
 		paramvals.push_back(pfacesUtils::vector2string(wSpacePerDimWidth));
-
 
 		// Extra include files
 		std::string extra_inc_files = m_spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_include_files);
@@ -918,12 +696,11 @@ namespace amytiss{
 		params.push_back(AMYTISS_KERNEL_PARAM_EXTRA_INC_FILES);
 		paramvals.push_back(rep_inc_files);
 
-
 		// updating the list of params
 		updatePrameters(params, paramvals);
 
 
-		// TASK2: Creating the kernel function and load their memory fingerprints
+		// TASK3: Creating the kernel function and load their memory fingerprints
 		//------------------------------------------------------------------------
 		std::string mem_fingerprint_file = spLaunchState->kernelPackPath + std::string("amytiss.mem");
 
@@ -948,7 +725,6 @@ namespace amytiss{
 		synthesizetFunction.setArguments(args_synthesize);
 		addKernelFunction(synthesizetFunction);
 
-
 		pfacesKernelFunction collectFunction(AMYTISS_KERNEL_FUNC_COLLECT_NAME,
 			{ AMYTISS_KERNEL_FUNC_COLLECT_ARG_XU_BAG_NAME, AMYTISS_KERNEL_FUNC_COLLECT_ARG_V_NAME});
 		pfacesKernelFunctionArguments args_collect =
@@ -958,12 +734,11 @@ namespace amytiss{
 		collectFunction.setArguments(args_collect);
 		addKernelFunction(collectFunction);
 
-
 		// setting the dimensions of X and Y
 		setDimensions(ssDim, singletonInput?1:isDim);
 
 
-		// TASK3: show some data
+		// TASK4: show some data
 		// -----------------------------
 		flat_t xuSpaceWidth = xSpaceFlatWidth * uSpaceFlatWidth;
 	
@@ -1008,19 +783,6 @@ namespace amytiss{
 			std::string msg = ssMsg.str();
 			pfacesTerminal::showWarnMessage(msg);
 		}
-
-		pfacesTerminal::showMessage(std::string("The org. cutting region (Lb):") + pfacesUtils::vector2string(orgCuttingBoundsLb));
-		pfacesTerminal::showMessage(std::string("The org. cutting region (Ub):") + pfacesUtils::vector2string(orgCuttingBoundsUb));
-		pfacesTerminal::showMessage(
-			std::string("Number of reach states after cutting the probability: ") +
-			std::to_string(num_reach_states) + std::string(" - ") + std::to_string(std::round(reduction)) + std::string("% reduction.")
-		);
-
-		if (saveP && num_reach_states > 256)
-			pfacesTerminal::showWarnMessage(
-				"Number of expected reach states for each (x,u) exeecds 256."
-				" Please consider not saving the abstraction as the size will probably be large.");
-
 	}
 
 	/* providing implementation of the virtual method: configureParallelProgram*/
@@ -1345,7 +1107,6 @@ namespace amytiss{
 	}
 
 }
-
 
 // registering the kernel 
 PFACES_REGISTER_LOADABLE_KERNEL(amytiss::amytissKernel)

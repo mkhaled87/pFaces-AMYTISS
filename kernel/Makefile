@@ -36,8 +36,9 @@ TARGET = kernel
 all: $(TARGET)
 
 kernel: 
+	$(CC) -c -o amytissPdfs.o -fPIC $(CXXFLAGS) $(PFACES_SDK_INC) amytissPDFs.cpp
 	$(CC) -c -o kernel.o -fPIC $(CXXFLAGS) $(PFACES_SDK_INC) $(KERNEL_SRC)
-	$(CC) -shared -o kernel.so $(PFACES_SDK_LNK) $(EXTRA_LNK) kernel.o
+	$(CC) -shared -o kernel.so $(PFACES_SDK_LNK) $(EXTRA_LNK) kernel.o amytissPDFs.o
 	cp kernel.so ../kernel-pack/$(KERNEL_NAME).driver
 
 clean:
