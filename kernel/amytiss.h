@@ -11,6 +11,7 @@
 /* pfaces related include files */
 #define _PFACES_INCLUDE_SYMBOLIC_LIBRARY
 #include <pfaces-sdk.h>
+#include "amytissPDFs.h"
 
 namespace amytiss{
 
@@ -73,10 +74,10 @@ namespace amytiss{
 	#define AMYTISS_KERNEL_PARAM_POST_DYNAMICS_BEFORE "@@POST_DYNAMICS_CODE_BEFORE@@"
 	#define AMYTISS_KERNEL_PARAM_POST_DYNAMICS_BODY "@@POST_DYNAMICS_BODY@@"
 	#define AMYTISS_KERNEL_PARAM_POST_DYNAMICS_AFTER "@@POST_DYNAMICS_CODE_AFTER@@"
-	#define AMYTISS_KERNEL_PARAM_INV_COVAR_MATRIX "@@INV_COVAR_MATRIX@@"
+	
+	#define AMYTISS_KERNEL_PARAM_PDF_DEFINES "@@PDF_DEFINES@@"
 	#define AMYTISS_KERNEL_PARAM_PDF_FUNCTION_BODY "@@PDF_FUNCTION_BODY@@"
-	#define AMYTISS_KERNEL_PARAM_PDF_BOUNDS "@@PDF_BOUNDS@@"
-	#define AMYTISS_KERNEL_PARAM_NUM_REACH_STATES "@@NUM_REACH_STATES@@"
+
 	#define AMYTISS_KERNEL_PARAM_TIME_STEPS "@@TIME_STEPS@@"
 	#define AMYTISS_KERNEL_PARAM_HAS_CONTROL_BYTES "@@HAS_CONTROL_BYTES@@"
 	#define AMYTISS_KERNEL_PARAM_CONTROL_BYTES "@@CONTROL_BYTES@@"
@@ -111,10 +112,6 @@ namespace amytiss{
 	#define AMYTISS_CONFIG_PARAM_post_dynamics_code_before	"post_dynamics.code_before"
 	#define AMYTISS_CONFIG_PARAM_post_dynamics_xx	"post_dynamics.xx"
 	#define AMYTISS_CONFIG_PARAM_post_dynamics_code_after	"post_dynamics.code_after"
-	#define AMYTISS_CONFIG_PARAM_noise_inv_covariance_matrix	"noise.inv_covariance_matrix"
-	#define AMYTISS_CONFIG_PARAM_noise_det_covariance_matrix	"noise.det_covariance_matrix"
-	#define AMYTISS_CONFIG_PARAM_noise_cutting_probability	"noise.cutting_probability"
-	#define AMYTISS_CONFIG_PARAM_noise_cutting_region	"noise.cutting_region"
 	#define AMYTISS_CONFIG_PARAM_specs_type	"specs.type"
 	#define AMYTISS_CONFIG_PARAM_specs_hyperrect "specs.hyperrect"
 	#define AMYTISS_CONFIG_PARAM_specs_time_steps "specs.time_steps"
@@ -156,9 +153,6 @@ namespace amytiss{
 	#define OUT_FILE_PARAM_SPECS_TYPE "specs-type"
 	#define OUT_FILE_PARAM_SPECS_TARGET_SET "specs-target-set"
 	#define OUT_FILE_PARAM_SPECS_SAFE_SET "specs-safe-set"
-	#define OUT_FILE_PARAM_INV_COVAR_MATRIX "inv-covariance-matrix"
-	#define OUT_FILE_PARAM_DET_COVAR_MATRIX "det-covariance-matrix"
-	#define OUT_FILE_PARAM_CUTTING_PROP "cutting-probability"
 	#define OUT_FILE_PARAM_ORG_CUTTING_REGION_LB "org-cutting-region-lb"
 	#define OUT_FILE_PARAM_ORG_CUTTING_REGION_UB "org-cutting-region-ub"
 	#define OUT_FILE_PARAM_SPECS_TYPE "specs-type"
@@ -207,10 +201,10 @@ namespace amytiss{
 	class amytissKernel : public pfaces2DKernel {
 	private:
 
-		/* the configuration reader */
+		// the configuration reader
 		const std::shared_ptr<pfacesConfigurationReader> m_spCfg;
 
-		/* management stuff */
+		// management stuff
 		bool singletonInput = false;
 		bool singletonDisturbance = false;
 		bool ssWasMisAlignedFlag = false;
@@ -218,27 +212,23 @@ namespace amytiss{
 		bool wsWasMisAlignedFlag = false;
 
 		// noise stuff
-		std::vector<std::vector<concrete_t>> inv_covar_matrix;
-		concrete_t det_covar_matrix;
-		concrete_t cutting_probability;
-		string cutting_region;
-		std::vector<concrete_t> fixed_cutting_region_lb;
-		std::vector<concrete_t> fixed_cutting_region_ub;
 		size_t time_steps;
 		bool saveP;	
 		bool saveC;
 
+		// extra include files for the CL code
 		std::string extra_inc_dir;
-	
-	
 
-		/* per-job per-task sub-buffer for func-0/arg-0 */
+		// per-job per-task sub-buffer for func-0/arg-0
 		std::vector<std::pair<size_t, size_t>> subBuffersAbstractRWBag;
 		std::vector<std::pair<size_t, size_t>> subBuffersSznthesizeRWBag;
 		std::vector<std::pair<size_t, size_t>> subBuffersCollectV;
 
+		// some private functions
+		std::string amytissGetPdfAsCFunctionBody();
+		std::string amytissGetPdfDefines();
+
 	public:
-		bool fixed_cutting_Region_provied = false;
 		/* some vars for local storage */
 		bool SafetyOrReachability;
 		size_t ssDim, isDim, wsDim;
@@ -249,6 +239,9 @@ namespace amytiss{
 
 		/* the cutting bould including the effect of W */
 		std::vector<concrete_t> orgCuttingBoundsLb, orgCuttingBoundsUb;
+
+		// the PDF object
+		std::shared_ptr<amytissPDF> spPdfObj;
 
 		/* the kernel functions */
 		amytissKernel(const std::shared_ptr<pfacesKernelLaunchState>& spLaunchState, 

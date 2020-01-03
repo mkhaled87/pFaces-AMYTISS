@@ -1,29 +1,56 @@
-#include "amytissPDFs.h"
+#include <pfaces-sdk.h>
 #include <symbolicc++.h>
 
-// class: amytissAbstractPDF
-//---------------------------
-amytissAbstractPDF::amytissAbstractPDF(std::shared_ptr<pfacesConfigurationReader>& _spCfg){
-    spCfg = _spCfg;
+#include "amytissPDFs.h"
 
-    ssDim = (size_t)_spCfg->readConfigValueInt(AMYTISS_CONFIG_PARAM_states_dim);
-    ssEta = pfacesUtils::sStr2Vector<concrete_t>(_spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_states_eta));
-    ssLb = pfacesUtils::sStr2Vector<concrete_t>(_spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_states_lb));
-    ssUb = pfacesUtils::sStr2Vector<concrete_t>(_spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_states_ub));         
+/* some global defines */
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+namespace amytiss{
+
+// class: amytissPDF
+//---------------------------
+amytissPDF::amytissPDF(
+    const std::shared_ptr<pfacesConfigurationReader> _spCfg,
+    size_t _ssDim, 
+    const std::vector<concrete_t> _ssEta, const std::vector<concrete_t> _ssLb, const std::vector<concrete_t> _ssUb){
+        
+    spCfg = _spCfg;
+    ssDim = _ssDim;
+    ssEta = _ssEta;
+    ssLb = _ssLb;
+    ssUb = _ssUb;
+
+    trunc_mode = PDF_TRUNCATION_MODE::NO_TRUNCATION;         
 }
+amytissPDF::~amytissPDF(){}
 
 
 // class: amytissPDF_NormalDistribution
 //---------------------------
-amytissPDF_NormalDistribution::amytissPDF_NormalDistribution(std::shared_ptr<pfacesConfigurationReader>& _spCfg)
-:amytissAbstractPDF(_spCfg){   
+#define AMYTISS_CONFIG_PARAM_noise_inv_covariance_matrix	"noise.inv_covariance_matrix"
+#define AMYTISS_CONFIG_PARAM_noise_det_covariance_matrix	"noise.det_covariance_matrix"
+#define AMYTISS_CONFIG_PARAM_noise_cutting_probability	"noise.cutting_probability"
+#define AMYTISS_CONFIG_PARAM_noise_cutting_region	"noise.cutting_region"
+#define OUT_FILE_PARAM_INV_COVAR_MATRIX "inv-covariance-matrix"
+#define OUT_FILE_PARAM_DET_COVAR_MATRIX "det-covariance-matrix"
+#define OUT_FILE_PARAM_CUTTING_PROP "cutting-probability"
+
+amytissPDF_NormalDistribution::amytissPDF_NormalDistribution(
+    const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim, 
+    const std::vector<concrete_t> _ssEta, const std::vector<concrete_t> _ssLb, const std::vector<concrete_t> _ssUb)
+:amytissPDF(_spCfg, _ssDim, _ssEta, _ssLb, _ssUb){   
 
     det_covar_matrix = _spCfg->readConfigValueReal(AMYTISS_CONFIG_PARAM_noise_det_covariance_matrix);
     cutting_probability = _spCfg->readConfigValueReal(AMYTISS_CONFIG_PARAM_noise_cutting_probability);
     std::string cutting_region = _spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_cutting_region);   
 
+
+    // Fixed truncation ?
     if (cutting_region != std::string("") && cutting_probability == 0) {
-        fixed_cutting_Region_provied = true;
+        trunc_mode =  PDF_TRUNCATION_MODE::FIXED_TRUNCATION;
         cutting_region = pfacesUtils::strReplaceAll(cutting_region, "{", "");
         cutting_region = pfacesUtils::strReplaceAll(cutting_region, "}", "");
 
@@ -36,6 +63,13 @@ amytissPDF_NormalDistribution::amytissPDF_NormalDistribution(std::shared_ptr<pfa
             fixed_cutting_region_ub.push_back(vals[2 * i + 1]);
         }
     }    
+
+    // cutting probability based or no truncation ?
+    if (cutting_region == std::string("") && cutting_probability != 0){
+        trunc_mode = PDF_TRUNCATION_MODE::CUTTING_PROBABILITY;
+    } else {
+        trunc_mode = PDF_TRUNCATION_MODE::NO_TRUNCATION;
+    }
 
     std::vector<concrete_t> tmp_covar_line = 
         pfacesUtils::sStr2Vector<concrete_t>(_spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_inv_covariance_matrix));
@@ -85,6 +119,9 @@ amytissPDF_NormalDistribution::getAdditionalDefines(){
 
 std::string 
 amytissPDF_NormalDistribution::getPDFBody(){
+
+        pfacesTerminal::showMessage(std::string("Computing the probability distribution function (PDF) symbolically .... "));
+
 		// required symbic vectors/matricies
 		Symbolic x("x", ssDim);
 		Symbolic Mu("Mu", ssDim);
@@ -135,7 +172,7 @@ amytissPDF_NormalDistribution::amytissGetPositiveZeroOriginatedCuttingBounds() {
 
 
 std::pair<std::vector<concrete_t>, std::vector<concrete_t>> 
-amytissPDF_NormalDistribution::getOriginatedCuttingBound(PDF_TRUNCATION_MODE trunc_mode){
+amytissPDF_NormalDistribution::getOriginatedCuttingBound(){
     	
     std::vector<concrete_t> cuttingBoundsLb, cuttingBoundsUb;
 
@@ -177,4 +214,16 @@ amytissPDF_NormalDistribution::getOriginatedCuttingBound(PDF_TRUNCATION_MODE tru
     }
 
     return std::make_pair(cuttingBoundsLb, cuttingBoundsUb);
+}
+
+void amytissPDF_NormalDistribution::addToOutputFileMetadata(StringDataDictionary& metadata){
+
+    metadata.push_back(std::make_pair(OUT_FILE_PARAM_INV_COVAR_MATRIX,
+        spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_inv_covariance_matrix)));
+    metadata.push_back(std::make_pair(OUT_FILE_PARAM_DET_COVAR_MATRIX,
+        spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_det_covariance_matrix)));		
+    metadata.push_back(std::make_pair(OUT_FILE_PARAM_CUTTING_PROP,
+        spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_cutting_probability)));
+}
+
 }
