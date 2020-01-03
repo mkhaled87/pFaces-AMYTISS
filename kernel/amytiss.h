@@ -169,17 +169,14 @@ namespace amytiss{
 		public:
 		static inline size_t getNumControlBytes(size_t time_steps) {
 			if(time_steps == 0) return 0;
-			return std::ceil((double)time_steps / 8.0l);
+			return (size_t)(std::ceil((double)time_steps / 8.0l));
 		}
-		static inline size_t getSize(bool saveP, size_t maxPostStates, size_t time_steps, bool saveController, bool isSafeOrReach){
+		static inline size_t getSize(bool saveP, size_t maxPostStates, size_t time_steps, bool saveController, size_t numWsymbols){
 			size_t mem = 0;
 
 			/* for each (x,u) a list of min/max probabilities to reach all cutting_bound states */
 			if (saveP) {
-				if (isSafeOrReach)
-					mem += 2 * maxPostStates * sizeof(concrete_t);
-				else
-					mem += (maxPostStates*sizeof(concrete_t)) + sizeof(concrete_t);
+				mem += numWsymbols * maxPostStates * sizeof(concrete_t);
 			}
 				
 

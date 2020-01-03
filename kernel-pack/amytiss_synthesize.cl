@@ -114,7 +114,7 @@ __kernel void synthesize(__global xu_bag_t* XU_bags, __global concrete_t* V) {
 		p_val = XU_bags[flat_thread_idx].P1_min[i];
 		#endif
 #else
-		/* computing the symbolic and concrete values of post-state */\
+		/* computing the symbolic and concrete values of post-state */
 		flat_to_symbolic(x_post_symbolic, ssDim, i, containingCuttingRegionWidths);
 		symbolic_to_concrete(x_post_concrete, ssDim, x_post_symbolic, containingCuttingRegionLb, containingCuttingRegionUb, ssEta);
 
@@ -125,7 +125,7 @@ __kernel void synthesize(__global xu_bag_t* XU_bags, __global concrete_t* V) {
 		/* we will minimize over W */
 		p_val = 1.0;
 		for (symbolic_t w = 0; w < wSymbolsCount; w++) {
-			/* computing the symbolic and concrete values of current (w) */\
+			/* computing the symbolic and concrete values of current (w) */
 			flat_to_symbolic(w_symbolic, wsDim, w, wsWidths);
 			symbolic_to_concrete(w_concrete, wsDim, w_symbolic, wsLb, wsUb, wsEta);
 
@@ -220,7 +220,7 @@ __kernel void collect(__global xu_bag_t* XU_bags, __global concrete_t* V) {
 	/* what is my memory position (including the case of sub-buffering) */
 	flat_thread_idx = x_flat - GLOBAL_OFFSET_X;
 
-	/* iterate over all u \in U and maximize the value of V_INT */
+	/* iterate over all u in U and maximize the value of V_INT */
 	__private symbolic_t u_control = 0;
 	for (symbolic_t u = 0; u < UNIVERSAL_WIDTH_Y; u++) {
 		xu_idx = (u - GLOBAL_OFFSET_Y) + (x_flat - GLOBAL_OFFSET_X) * PROCESS_WIDTH_Y;

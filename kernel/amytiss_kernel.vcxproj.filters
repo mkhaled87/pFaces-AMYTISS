@@ -17,9 +17,15 @@
     <ClInclude Include="amytiss.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="amytissPDFs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="amytiss.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="amytissPDFs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

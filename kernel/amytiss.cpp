@@ -31,7 +31,7 @@ namespace amytiss{
 	
 		// threaded execution to set V values
 		size_t num_vals = thisParallelProgram.m_dataPool[1].second / sizeof(concrete_t);
-		concrete_t set_val = pAmytissKernel->SafetyOrReachability ? 1.0 : 0.0;
+		concrete_t set_val = (concrete_t)(pAmytissKernel->SafetyOrReachability ? 1.0 : 0.0);
 		pfacesUtils::threaded_for(num_vals, [&pV, &set_val](int start, int end) {
 			for (int i = start; i < end; ++i)
 				pV[i] = set_val;
@@ -57,7 +57,9 @@ namespace amytiss{
 		bool isSaveTransitions = thisParallelProgram.m_spCfgReader->readConfigValueBool(AMYTISS_CONFIG_PARAM_save_transitions);
 		bool isSaveController = thisParallelProgram.m_spCfgReader->readConfigValueBool(AMYTISS_CONFIG_PARAM_save_controller);
 		size_t time_steps = thisParallelProgram.m_spCfgReader->readConfigValueInt(AMYTISS_CONFIG_PARAM_specs_time_steps);
-		size_t bagSize = XU_bag::getSize(isSaveTransitions, num_reach_states, time_steps, isSaveController, specs_type == std::string(AMYTISS_CONFIG_PARAM_specs_type_value_safe));
+		size_t bagSize = XU_bag::getSize(isSaveTransitions, num_reach_states, time_steps, 
+			isSaveController, pfacesBigInt::getPrimitiveValue(thisAmytissKernel->wSpaceFlatWidth));
+
 		size_t beVerboseLevel = thisParallelProgram.m_beVerboseLevel;
 		std::string	strDataImplementation	= thisParallelProgram.m_spCfgReader->readConfigValueString(AMYTISS_CONFIG_PARAM_data);
 	
@@ -120,6 +122,7 @@ namespace amytiss{
 		metadata.push_back(std::make_pair(OUT_FILE_PARAM_SYMBOLIC_NAME, std::string(symbolic_t_cl_string)));
 		metadata.push_back(std::make_pair(OUT_FILE_PARAM_SYMBOLIC_SIZE, std::to_string(sizeof(symbolic_t))));
 		metadata.push_back(std::make_pair(OUT_FILE_PARAM_USED_KERNEL_NAME, thisKernel.getKernelName()));	
+
 		metadata.push_back(std::make_pair(OUT_FILE_PARAM_ORG_CUTTING_REGION_LB,
 			pfacesUtils::vector2string<concrete_t>(thisAmytissKernel->orgCuttingBoundsLb)));
 		metadata.push_back(std::make_pair(OUT_FILE_PARAM_ORG_CUTTING_REGION_UB,
@@ -226,28 +229,35 @@ namespace amytiss{
 
 	// this gets some defines to be used by the pdf
 	std::string amytissKernel::amytissGetPdfDefines() {
-		
-		std::vector<concrete_t> cuttingBoundsLb, cuttingBoundsUb;
+
 		std::stringstream ssE;
-		
+
+		// collect and check
 		auto pair = spPdfObj->getOriginatedCuttingBound();
-		cuttingBoundsLb = pair.first;
-		cuttingBoundsUb = pair.second;
+		orgCuttingBoundsLb = pair.first;
+		orgCuttingBoundsUb = pair.second;
+
+		if (orgCuttingBoundsLb.size() != ssDim || orgCuttingBoundsUb.size() != ssDim)
+			throw std::runtime_error("amytissKernel::amytissGetPdfDefines: the LB/UB of the cutting region has invalid size.");
+
+		for(size_t i=0; i<ssDim; i++)
+			if(orgCuttingBoundsLb[i] > orgCuttingBoundsUb[i])
+				throw std::runtime_error("amytissKernel::amytissGetPdfDefines: the LB/UB of the cutting region is invalid: the LB should be smaller than or equal to the UB.");
 
 		// the cutting region
 		ssE << "/* the cutting bounds of the PDF */"  << std::endl;
 		ssE << "#define CUTTING_BOUND_INCLUDING_W_EFFECT_LB {";
-		ssE << pfacesUtils::vector2string(cuttingBoundsLb);
+		ssE << pfacesUtils::vector2string(orgCuttingBoundsLb);
 		ssE << "}" << std::endl;
 		ssE << "#define CUTTING_BOUND_INCLUDING_W_EFFECT_UB {";
-		ssE << pfacesUtils::vector2string(cuttingBoundsUb);
+		ssE << pfacesUtils::vector2string(orgCuttingBoundsUb);
 		ssE << "}" << std::endl;
 
 		// number of elements + widths of the region
 		std::vector<symbolic_t> contaningCuttingRegionWidths;
 		symbolic_t num_symbols_containing_region =
 			pfacesBigInt::getPrimitiveValue(amytissGetFlatWidthFromConcreteSpace(ssDim, ssEta,
-				cuttingBoundsLb, cuttingBoundsUb, {}, contaningCuttingRegionWidths));
+				orgCuttingBoundsLb, orgCuttingBoundsUb, {}, contaningCuttingRegionWidths));
 		ssE << "/* number of symbols in the cutting region */"  << std::endl;
 		ssE << "#define NUM_REACH_STATES " << num_symbols_containing_region << std::endl;
 		ssE << "#define CONTAINING_REGION_WIDTHS {" << pfacesUtils::vector2string(contaningCuttingRegionWidths) << "}" << std::endl;
@@ -264,8 +274,8 @@ namespace amytiss{
 		);
 
 		double reduction = 100.0* (1.0 - (double)num_symbols_containing_region /(double)num_ss_states);
-		pfacesTerminal::showMessage(std::string("The org. cutting region (Lb):") + pfacesUtils::vector2string(cuttingBoundsLb));
-		pfacesTerminal::showMessage(std::string("The org. cutting region (Ub):") + pfacesUtils::vector2string(cuttingBoundsUb));
+		pfacesTerminal::showMessage(std::string("The org. cutting region (Lb):") + pfacesUtils::vector2string(orgCuttingBoundsLb));
+		pfacesTerminal::showMessage(std::string("The org. cutting region (Ub):") + pfacesUtils::vector2string(orgCuttingBoundsUb));
 		pfacesTerminal::showMessage(
 			std::string("Number of reach-states after cutting the probability: ") +
 			std::to_string(num_symbols_containing_region) + std::string(" - ") + std::to_string(std::round(reduction)) + std::string("% reduction.")
@@ -479,8 +489,8 @@ namespace amytiss{
 
 					/* target data is only used in the low-level code to check if a point is target */
 					/* we inflate it with quarter-eta to avoid any precision errors in float comparison */
-					target_hyperrect[2 * i + 0] -= ssEta[i]/4.0;
-					target_hyperrect[2 * i + 1] += ssEta[i]/4.0;
+					target_hyperrect[2 * i + 0] -= (concrete_t)(ssEta[i]/4.0);
+					target_hyperrect[2 * i + 1] += (concrete_t)(ssEta[i]/4.0);
 
 					target_data += 
 						std::string("{") + std::to_string(target_hyperrect[2 * i + 0]) + 
@@ -538,8 +548,8 @@ namespace amytiss{
 
 						/* avoid data is only used in the low-level code to check if a point is avoid */
 						/* we inflate it with quarter-eta to avoid any precision errors in float comparison */
-						avoid_hyperrect[2 * i + 0] -= ssEta[i] / 4.0;
-						avoid_hyperrect[2 * i + 1] += ssEta[i] / 4.0;
+						avoid_hyperrect[2 * i + 0] -= (concrete_t)(ssEta[i] / 4.0);
+						avoid_hyperrect[2 * i + 1] += (concrete_t)(ssEta[i] / 4.0);
 
 						avoid_data +=
 							std::string("{") + std::to_string(avoid_hyperrect[2 * i + 0]) +
@@ -704,7 +714,9 @@ namespace amytiss{
 		//------------------------------------------------------------------------
 		std::string mem_fingerprint_file = spLaunchState->kernelPackPath + std::string("amytiss.mem");
 
-		size_t XU_bag_size = XU_bag::getSize(saveP, num_reach_states, time_steps, saveC, specs_type == std::string(AMYTISS_CONFIG_PARAM_specs_type_value_safe));
+		size_t XU_bag_size = XU_bag::getSize(saveP, num_reach_states, time_steps, saveC, 
+			pfacesBigInt::getPrimitiveValue(wSpaceFlatWidth));
+
 		size_t V_size = (sizeof(concrete_t))*pfacesBigInt::getPrimitiveValue(xSpaceFlatWidth);
 	
 		pfacesKernelFunction abstractFunction(AMYTISS_KERNEL_FUNC_ABSTRACT_NAME,
@@ -1105,7 +1117,6 @@ namespace amytiss{
 
 		pfacesTerminal::showInfoMessage("TODO: Implement the tuner program of AMYTISS to have better results !");
 	}
-
 }
 
 // registering the kernel 

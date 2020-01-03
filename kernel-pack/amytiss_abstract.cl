@@ -54,16 +54,8 @@ __kernel void abstract(__global xu_bag_t* XU_bags) {
 	symbolic_to_concrete(x_concrete, ssDim, x_symbolic, ssLb, ssUb, ssEta);
 	symbolic_to_concrete(u_concrete, isDim, u_symbolic, isLb, isUb, isEta);
 	
-	#ifdef HAS_SAFE
-	/* computing the min/max probabilities */
-	compute_min_max_probabilities(&XU_bags[flat_thread_idx], x_concrete, u_concrete);	
-	#endif
-
-	#ifdef HAS_TARGET
-	/* computing the min P1 and P0 probabilities */
-	compute_P0_P1_probabilities(&XU_bags[flat_thread_idx], x_concrete, u_concrete);
-	#endif
-
+	/* computing the probabilities */
+	compute_probabilities(&XU_bags[flat_thread_idx], x_concrete, u_concrete);
 #endif
 
 	return;

@@ -193,9 +193,11 @@ DEL $(TargetDir)$(TargetFileName)</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="amytiss.cpp" />
+    <ClCompile Include="amytissPDFs.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="amytiss.h" />
+    <ClInclude Include="amytissPDFs.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\kernel-pack\amytiss.cpu.cl" />

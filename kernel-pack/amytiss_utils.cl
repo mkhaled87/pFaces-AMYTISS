@@ -173,18 +173,11 @@ void post_dynamics(concrete_t* xx, const concrete_t* x, const concrete_t* u, con
 /* a memory bag used for global memory (RW: Read/Write) : will be duplicated along XU 2D domain */
 typedef struct __attribute__((packed)) xu_bag {
 #ifdef SAVE_P_MATRIX
-#ifdef HAS_SAFE
-	concrete_t P_min[NUM_REACH_STATES];		/* the minimum P values (wrt w \in W) for each post_state \in the cutting-hypercube */
-	concrete_t P_max[NUM_REACH_STATES];		/* the maximum P values (wrt w \in W) for each post_state \in the cutting-hypercube */
+	concrete_t Pr[WS_NUM_SYBOLS][NUM_REACH_STATES];		/* the Probability (for-each w in W) (for-each post_state in the cutting-region) */
 #endif
-#ifdef HAS_TARGET
-	concrete_t P0_min;
-	concrete_t P1_min[NUM_REACH_STATES];
-#endif
-#endif
-	concrete_t V_INT;						/* the value of current (x,u) in the V_INT matrix*/
+	concrete_t V_INT;									/* the value of current (x,u) in the V_INT matrix*/
 #ifdef HAS_CONTROL_BYTES	
-	char IS_CONTROL[NUM_CONTROL_BYTES];		/* flags, for each time step, if u is control action in x */
+	char IS_CONTROL[NUM_CONTROL_BYTES];					/* flags, for each time step, if u is control action in x */
 #endif
 } xu_bag_t;
 
@@ -215,15 +208,14 @@ concrete_t integratePdf(const concrete_t* x, const concrete_t* Mu) {
 }
 
 #ifdef SAVE_P_MATRIX
-#ifdef HAS_SAFE
 /* this function computes the min/max provavilities for the elements in the containing cutting region 
- * the idea is to consider all possible disturbances w \in W and for each value we compute the Mu
+ * the idea is to consider all possible disturbances w in W and for each value we compute the Mu
  * then we construct the PDF around this Mu and compute the probabilites and we ccompare them against
  * a min/max values (i.e., compared to other w values). at the end, we have arrays of min/max prob 
  * values over all possible disturbances.
  */
-void compute_min_max_probabilities(__global xu_bag_t* XU_bag, const concrete_t* x, const concrete_t* u);
-void compute_min_max_probabilities(__global xu_bag_t* XU_bag, const concrete_t* x, const concrete_t* u){
+void compute_probabilities(__global xu_bag_t* XU_bag, const concrete_t* x, const concrete_t* u);
+void compute_probabilities(__global xu_bag_t* XU_bag, const concrete_t* x, const concrete_t* u){
 
 	__private concrete_t ssEta[ssDim] = SS_ETA_LIST;
 	__private concrete_t wsEta[wsDim] = WS_ETA_LIST;
@@ -242,13 +234,27 @@ void compute_min_max_probabilities(__global xu_bag_t* XU_bag, const concrete_t* 
 	__private concrete_t containingCuttingRegionUb[ssDim];
 	__private symbolic_t x_post_symbolic[ssDim];
 	__private concrete_t x_post_concrete[ssDim];
-	__private concrete_t p;
 
-	/* initialize probability arrays */
-	for (unsigned int i = 0; i < NUM_REACH_STATES; i++){
-		XU_bag->P_min[i] = 1.0;
-		XU_bag->P_max[i] = 0.0;
+#ifdef HAS_TARGET
+	if (is_target(x)) {
+		for (symbolic_t w = 0; w < wSymbolsCount; w++) {
+			for (unsigned int i = 0; i < NUM_REACH_STATES; i++) {
+				XU_bag->Pr[w][i] = 0.0;
+			}
+		}
+		return;
 	}
+#endif
+#ifdef HAS_AVOID
+	if (is_avoid(x)) {
+		for (symbolic_t w = 0; w < wSymbolsCount; w++) {
+			for (unsigned int i = 0; i < NUM_REACH_STATES; i++) {
+				XU_bag->Pr[w][i] = 0.0;
+			}
+		}
+		return;
+	}
+#endif
 
 	/* compute Mu when w=0 (possible post state without w effect) from current (x,u,w=0) */
 	for (unsigned int  i = 0; i < wsDim; i++)
@@ -264,7 +270,7 @@ void compute_min_max_probabilities(__global xu_bag_t* XU_bag, const concrete_t* 
 	/* iterate over all disturbance posibilities */
 	for (symbolic_t w = 0; w < wSymbolsCount; w++) {
 
-		/* computing the symbolic and concrete values of current (w) */\
+		/* computing the symbolic and concrete values of current (w) */
 		flat_to_symbolic(w_symbolic, wsDim, w, wsWidths);
 		symbolic_to_concrete(w_concrete, wsDim, w_symbolic, wsLb, wsUb, wsEta);
 
@@ -272,135 +278,17 @@ void compute_min_max_probabilities(__global xu_bag_t* XU_bag, const concrete_t* 
 		post_dynamics(Mu, x, u, w_concrete);	
 
 		// iterate over all reachable states in the cutting bound
-		for (symbolic_t k = 0; k < NUM_SYMBOLS_CONTAINING_REGION; k++) {
+		for (symbolic_t k = 0; k < NUM_REACH_STATES; k++) {
 
-			/* computing the symbolic and concrete values of post-state */\
+			/* computing the symbolic and concrete values of post-state */
 			flat_to_symbolic(x_post_symbolic, ssDim, k, containingCuttingRegionWidths);
 			symbolic_to_concrete(x_post_concrete, ssDim, x_post_symbolic, containingCuttingRegionLb, containingCuttingRegionUb, ssEta);
 
-			/* using Mu as a the origin of the PDF(x) and computing the integration (probability)
-				at each state within the cutting region */
-			p = integratePdf(x_post_concrete, Mu);
-
-			// setting the values
-			if (p < XU_bag->P_min[k])
-				XU_bag->P_min[k] = p;
-
-			if (p > XU_bag->P_max[k])
-				XU_bag->P_max[k] = p;
+			/* using Mu as a the origin of the PDF(x) and computing the integration (probability) at each state within the cutting region */
+			XU_bag->Pr[w][k] = integratePdf(x_post_concrete, Mu);
 		}
 	}
+
+	return;
 }
-#endif
-#endif
-
-#ifdef SAVE_P_MATRIX
-#ifdef HAS_TARGET
-/* this function computes the P0 and P1 provavilities for later reachability synthesis */
-void compute_P0_P1_probabilities(__global xu_bag_t* XU_bag, const concrete_t* x, const concrete_t* u);
-void compute_P0_P1_probabilities(__global xu_bag_t* XU_bag, const concrete_t* x, const concrete_t* u) {
-
-	__private concrete_t ssEta[ssDim] = SS_ETA_LIST;
-	__private concrete_t wsEta[wsDim] = WS_ETA_LIST;
-	__private concrete_t wsLb[wsDim] = WS_LB_LIST;
-	__private concrete_t wsUb[wsDim] = WS_UB_LIST;
-	__private symbolic_t wsWidths[wsDim] = WS_WIDTHS_LIST;
-	__private symbolic_t wSymbolsCount = WS_NUM_SYBOLS;
-	__private symbolic_t w_symbolic[wsDim];
-	__private concrete_t w_concrete[wsDim];
-	__private concrete_t Mu[ssDim];
-	__private concrete_t Mu_w0[ssDim];
-	__private concrete_t containingCuttingRegionLb_org[ssDim] = CUTTING_BOUND_INCLUDING_W_EFFECT_LB;
-	__private concrete_t containingCuttingRegionUb_org[ssDim] = CUTTING_BOUND_INCLUDING_W_EFFECT_UB;
-	__private symbolic_t containingCuttingRegionWidths[ssDim] = CONTAINING_REGION_WIDTHS;
-	__private concrete_t containingCuttingRegionLb[ssDim];
-	__private concrete_t containingCuttingRegionUb[ssDim];
-	__private symbolic_t x_post_symbolic[ssDim];
-	__private concrete_t x_post_concrete[ssDim];
-	__private concrete_t p;
-	__private concrete_t targetSetLb[ssDim] = TARGET_SET_LB;
-	__private concrete_t targetSetUb[ssDim] = TARGET_SET_UB;
-	__private symbolic_t targetSetWidths[ssDim] = TARGET_SET_WIDTHS;
-
-
-	if (is_target(x)) {
-		XU_bag->P0_min = 0;
-		for (unsigned int i = 0; i < NUM_REACH_STATES; i++) {
-			XU_bag->P1_min[i] = 0.0;
-		}
-		return;
-	}
-
-#ifdef HAS_AVOID
-	if (is_avoid(x)) {
-		XU_bag->P0_min = 0;
-		for (unsigned int i = 0; i < NUM_REACH_STATES; i++) {
-			XU_bag->P1_min[i] = 0.0;
-		}
-		return;
-	}
-#endif
-
-
-	/* initialize probability arrays */
-	for (unsigned int i = 0; i < NUM_REACH_STATES; i++) {
-		XU_bag->P1_min[i] = 1.0;
-	}
-
-	/* compute Mu when w=0 (possible post state without w effect) from current (x,u,w=0) */
-	for (unsigned int i = 0; i < wsDim; i++)
-		w_concrete[i] = 0.0;
-	post_dynamics(Mu_w0, x, u, w_concrete);
-
-	/* shifting the containing cutting region based on Mu with w = 0*/
-	for (unsigned int i = 0; i < ssDim; i++) {
-		containingCuttingRegionLb[i] = containingCuttingRegionLb_org[i] + Mu_w0[i];
-		containingCuttingRegionUb[i] = containingCuttingRegionUb_org[i] + Mu_w0[i];
-	}
-
-	/* for XU_bag->P1_min */
-	/* iterate over all disturbance posibilities */
-	for (symbolic_t w = 0; w < wSymbolsCount; w++) {
-
-		/* computing the symbolic and concrete values of current (w) */\
-			flat_to_symbolic(w_symbolic, wsDim, w, wsWidths);
-		symbolic_to_concrete(w_concrete, wsDim, w_symbolic, wsLb, wsUb, wsEta);
-
-		/* compute Mu (possible post state) from current (x,u,w) */
-		post_dynamics(Mu, x, u, w_concrete);
-
-		// iterate over all reachable states in the cutting bound
-		for (symbolic_t k = 0; k < NUM_SYMBOLS_CONTAINING_REGION; k++) {
-
-			/* computing the symbolic and concrete values of post-state */\
-				flat_to_symbolic(x_post_symbolic, ssDim, k, containingCuttingRegionWidths);
-			symbolic_to_concrete(x_post_concrete, ssDim, x_post_symbolic, containingCuttingRegionLb, containingCuttingRegionUb, ssEta);
-
-			/* using Mu as a the origin of the PDF(x) and computing the integration (probability)
-				at each state within the cutting region */
-			p = integratePdf(x_post_concrete, Mu);
-
-			// setting the values
-			if (p < XU_bag->P1_min[k])
-				XU_bag->P1_min[k] = p;
-		}
-	}
-
-
-	/* for XU_bag->P0min */
-	/* for all symbols in the target set */
-	concrete_t sumP0 = 0.0;
-	for (symbolic_t t = 0; t < TARGET_SET_NUM_SYMBOLS; t++) {
-		/* computing the symbolic and concrete values of post-state */
-		flat_to_symbolic(x_post_symbolic, ssDim, t, targetSetWidths);
-		symbolic_to_concrete(x_post_concrete, ssDim, x_post_symbolic, targetSetLb, targetSetUb, ssEta);
-
-		/* sum the probability of this target set with widths=eta and center=x_post_concrete*/
-		sumP0 += integratePdf(x_post_concrete, Mu_w0);
-	}
-	XU_bag->P0_min = sumP0;
-
-
-}
-#endif
 #endif
