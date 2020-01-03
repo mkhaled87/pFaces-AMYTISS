@@ -123,14 +123,14 @@ amytissPDF_NormalDistribution::getPDFBody(){
         pfacesTerminal::showMessage(std::string("Computing the probability distribution function (PDF) symbolically .... "));
 
 		// required symbic vectors/matricies
-		Symbolic x("x", ssDim);
-		Symbolic Mu("Mu", ssDim);
-		Symbolic SigmaInv("SigmaInv", ssDim, ssDim);
+		Symbolic x("x", (int)ssDim);
+		Symbolic Mu("Mu", (int)ssDim);
+		Symbolic SigmaInv("SigmaInv", (int)ssDim, (int)ssDim);
 
 		// e = -0.5*(x-Mu)'*inv(Sigma)*(x-Mu)
 		Symbolic xMinusMu = x - Mu;
 		Symbolic e = -0.5 * xMinusMu.transpose() * SigmaInv * xMinusMu;
-		concrete_t val = 1.0l / std::sqrt(std::pow(2.0l * M_PI, ssDim) * det_covar_matrix);
+		concrete_t val = (concrete_t)(1.0l / std::sqrt(std::pow(2.0l * M_PI, ssDim) * det_covar_matrix));
 
 		// the pdf as a strings	
 		std::stringstream ssE;
@@ -154,8 +154,8 @@ amytissPDF_NormalDistribution::amytissGetPositiveZeroOriginatedCuttingBounds() {
         return ret;
     }
 
-    concrete_t val = 1.0l / std::sqrt(std::pow(2.0l * M_PI, ssDim) * det_covar_matrix);
-    concrete_t logVal = (-2 * std::log(cutting_probability / val));
+    concrete_t val = (concrete_t)(1.0l / std::sqrt(std::pow(2.0l * M_PI, ssDim) * det_covar_matrix));
+    concrete_t logVal = (concrete_t)(-2 * std::log(cutting_probability / val));
 
     if (logVal < 0.0)
         throw std::runtime_error("amytissGetPositiveZeroOriginatedCuttingBounds: Invalid value for the cutting-probability. Are you setting a cutting prbability above the PDF max value ?");
