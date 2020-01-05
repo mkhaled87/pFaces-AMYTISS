@@ -175,7 +175,7 @@ typedef struct __attribute__((packed)) xu_bag {
 #ifdef SAVE_P_MATRIX
 	concrete_t Pr[WS_NUM_SYBOLS][NUM_REACH_STATES];		/* the Probability (for-each w in W) (for-each post_state in the cutting-region) */
 #endif
-	concrete_t V_INT;									/* the value of current (x,u) in the V_INT matrix*/
+	concrete_t V_INT_MIN;								/* the min value (wrt w) of current (x,u) in the V_INT_MIN*/
 #ifdef HAS_CONTROL_BYTES	
 	char IS_CONTROL[NUM_CONTROL_BYTES];					/* flags, for each time step, if u is control action in x */
 #endif

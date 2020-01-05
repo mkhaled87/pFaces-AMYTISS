@@ -4,21 +4,16 @@ classdef amytissXUBag
     
     % The bag contents:
     %  __________________
-    % |  concrete_t P_min[NUM_REACH_STATES]          (when is_p_saved is true)
-    % |  concrete_t P_max[NUM_REACH_STATES]          (when is_p_saved is true)
-    % |  concrete_t V_INT;
-    % |  char IS_CONTROL[NUM_CONTROL_BYTES];
+    % |  concrete_t Pr[w_width][NUM_REACH_STATES]            (when is_p_saved is true)
+    % |  concrete_t V_INT_MIN;
+    % |  char IS_CONTROL[NUM_CONTROL_BYTES];                 (when has_control is true)
     %  ------------------
     % NUM_CONTROL_BYTES = ceil(time_steps/8)
     %
     properties
-        is_safe_or_reach
-        
-        P_min_idx
-        P_max_idx
-        P1_min_idx
-        P0_min_idx
-        V_int_idx
+
+        Pr_idx
+        V_int_min_idx
         Is_Control_idx
         
         bag_size
@@ -27,6 +22,7 @@ classdef amytissXUBag
         time_steps
         x_width
         u_width
+        w_width
         reach_set_lb
         reach_set_ub
         num_control_bytes
@@ -55,7 +51,7 @@ classdef amytissXUBag
             obj.time_steps = str2double(pfacesDataOnject.getMetadataElement('time-steps'));
             obj.x_width = str2double(pfacesDataOnject.getMetadataElement('x-width'));
             obj.u_width = str2double(pfacesDataOnject.getMetadataElement('u-width'));
-            obj.is_safe_or_reach = strcmp(pfacesDataOnject.getMetadataElement('specs-type'),'safe');
+            obj.w_width = str2double(pfacesDataOnject.getMetadataElement('w-width'));
             
             obj.reach_set_lb = str2double(split(pfacesDataOnject.getMetadataElement('org-cutting-region-lb'),','))';
             obj.reach_set_ub = str2double(split(pfacesDataOnject.getMetadataElement('org-cutting-region-ub'),','))';
@@ -81,29 +77,15 @@ classdef amytissXUBag
             end   
             
             if obj.is_p_saved
-                if obj.is_safe_or_reach
-                    obj.P_min_idx = 0;
-                    obj.P_max_idx = obj.P_min_idx + obj.num_reach_states*obj.concrete_data_size;                
-                    obj.V_int_idx = obj.P_max_idx + obj.num_reach_states*obj.concrete_data_size;
-                    obj.P0_min_idx = 'invalid';
-                    obj.P1_min_idx = 'invalid';
-                else
-                    obj.P0_min_idx = 0;
-                    obj.P1_min_idx = obj.P0_min_idx + obj.concrete_data_size;
-                    obj.V_int_idx = obj.P1_min_idx + obj.num_reach_states*obj.concrete_data_size;                    
-                    obj.P_min_idx = 'invalid';
-                    obj.P_max_idx = 'invalid';
-                end
+                obj.Pr_idx = 0;
+                obj.V_int_min_idx = obj.Pr_idx + obj.w_width*obj.num_reach_states*obj.concrete_data_size;
             else
-                obj.P_min_idx = 'invalid';
-                obj.P_max_idx = 'invalid';     
-                obj.P0_min_idx = 'invalid';
-                obj.P1_min_idx = 'invalid';                     
-                obj.V_int_idx = 0;                
+                obj.Pr_idx = 'invalid';
+                obj.V_int_min_idx = 0;                
             end
             
             if obj.num_control_bytes > 0
-                obj.Is_Control_idx = obj.V_int_idx + obj.concrete_data_size;
+                obj.Is_Control_idx = obj.V_int_min_idx + obj.concrete_data_size;
             else
                 obj.Is_Control_idx = 'invalid';
             end    
@@ -116,69 +98,24 @@ classdef amytissXUBag
             i = obj.bag_idx;
         end
         
-        function p = getPmin(obj, reach_state_idx)
-            if ~obj.is_safe_or_reach
-                error('This bag is for reachability and has no Pmin.');
-            end
-            
+        function p = getPr(obj, w_idx, reach_state_idx)
             if obj.is_p_saved
                 if(reach_state_idx >= obj.num_reach_states)
                     error('reach_state_idx exceeds number of reach states.');
                 end
-                idx = obj.P_min_idx + reach_state_idx*obj.concrete_data_size;
+                
+                idx = obj.Pr_idx + ...
+                        w_idx*obj.num_reach_states*obj.concrete_data_size + ...
+                        reach_state_idx*obj.concrete_data_size;
+                    
                 p = amytissXUBag.getValueFromArray(obj.bag_data, idx, obj.concrete_data_type, obj.concrete_data_size);
             else
-                error('Pmin is not stored in the file.');
+                error('The P-matrix is not stored in the file.');
             end
-        end
+        end            
         
-        function p = getPmax(obj, reach_state_idx)
-            if ~obj.is_safe_or_reach
-                error('This bag is for reachability and has no Pmax.');
-            end
-            
-            if obj.is_p_saved                
-                if(reach_state_idx >= obj.num_reach_states)
-                    error('reach_state_idx exceeds number of reach states.');
-                end
-                idx = obj.P_max_idx + reach_state_idx*obj.concrete_data_size;
-                p = amytissXUBag.getValueFromArray(obj.bag_data, idx, obj.concrete_data_type, obj.concrete_data_size);            
-            else
-                error('Pmax is not stored in the file.');
-            end
-        end
-        
-        function p = getP0min(obj)
-            if obj.is_safe_or_reach
-                error('This bag is for safety and has no P0min.');
-            end
-            
-            if obj.is_p_saved                
-                idx = obj.P0_min_idx;
-                p = amytissXUBag.getValueFromArray(obj.bag_data, idx, obj.concrete_data_type, obj.concrete_data_size);
-            else
-                error('P0min is not stored in the file.');
-            end
-        end    
-
-        function p = getP1min(obj, reach_state_idx)
-            if obj.is_safe_or_reach
-                error('This bag is for safety and has no P1min.');
-            end
-            
-            if obj.is_p_saved
-                if(reach_state_idx >= obj.num_reach_states)
-                    error('reach_state_idx exceeds number of reach states.');
-                end
-                idx = obj.P1_min_idx + reach_state_idx*obj.concrete_data_size;
-                p = amytissXUBag.getValueFromArray(obj.bag_data, idx, obj.concrete_data_type, obj.concrete_data_size);
-            else
-                error('Pmin is not stored in the file.');
-            end
-        end        
-        
-        function p = getVint(obj)
-            idx = obj.V_int_idx;
+        function p = getVintMin(obj)
+            idx = obj.V_int_min_idx;
             p = amytissXUBag.getValueFromArray(obj.bag_data, idx, obj.concrete_data_type, obj.concrete_data_size);                        
         end
         

@@ -180,8 +180,8 @@ namespace amytiss{
 			}
 				
 
-			/* for each (x,u) a value for V_int */
-			mem += sizeof(concrete_t);
+			/* for each (x,u) a value for V_int, for each w ! */
+			mem += numWsymbols * sizeof(concrete_t);
 
 			/* for each (x,u) a string og bits each represeting the applicability of u in x in the time step */
 			if(saveController)
