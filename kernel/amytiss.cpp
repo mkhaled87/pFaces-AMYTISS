@@ -1121,5 +1121,3 @@ namespace amytiss{
 
 // registering the kernel 
 PFACES_REGISTER_LOADABLE_KERNEL(amytiss::amytissKernel)
-
-
