@@ -28,6 +28,7 @@ target_hr = str2double(split(toy2dDataFile.getMetadataElement('target-hyperrect'
 target_hyper_rect = [target_hr(1:2:end); target_hr(2:2:end)];
 avoid_hr = str2double(split(toy2dDataFile.getMetadataElement('avoid-hyperrect'),','))';
 avoid_hyper_rect = [avoid_hr(1:2:end); avoid_hr(2:2:end)];
+ss_hyper_rect = [ss_lb; ss_ub];
 
 % simulate/plot
 close all;
@@ -43,6 +44,12 @@ for k=1:num_simulations
     us = [];   
     reached = false;
     for t=0:time_steps-1
+        
+        if(~isInsideHyberRect(x,ss_hyper_rect))
+            disp(['Simulation #' num2str(k) ': state went out of SS!']);
+            reached = true;
+            break;
+        end          
 
         % get input for state [not aware of noise]
         u = getControlAction(toy2dDataFile, x, t)';
