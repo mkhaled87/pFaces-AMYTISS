@@ -68,9 +68,13 @@ for k=1:num_simulations
     end
     if ~reached
         disp(['Simulation #' num2str(k) ': target not reached within ' num2str(time_steps) ' steps !']);
+        plot(xs(1,1), xs(1,2), '*r');
+        plot(xs(:,1), xs(:,2), 'o-r');
+    else
+        plot(xs(1,1), xs(1,2), '*b');
+        plot(xs(:,1), xs(:,2), 'o-b');
     end
-    plot(xs(1,1), xs(1,2), '*k');
-    plot(xs(:,1), xs(:,2), 'o-b');    
+        
 end
 
 xlabel('x1');

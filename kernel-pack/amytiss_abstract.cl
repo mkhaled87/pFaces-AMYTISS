@@ -34,16 +34,13 @@ __kernel void abstract(__global xu_bag_t* XU_bags) {
 	x_flat = UNIVERSAL_INDEX_X;
 	u_flat = UNIVERSAL_INDEX_Y;
 
-
-
 	/* what is my memory position (including the case of sub-buffering) */
 	flat_thread_idx = (u_flat - GLOBAL_OFFSET_Y) + (x_flat - GLOBAL_OFFSET_X) * PROCESS_WIDTH_Y;
-
 
 	/* resetting the control values */
 #ifdef HAS_CONTROL_BYTES	
 	for (unsigned int i = 0; i < NUM_CONTROL_BYTES; i++)
-		XU_bags[flat_thread_idx].IS_CONTROL[i] = 0x00;
+		XU_bags[flat_thread_idx].IS_CONTROL[i] = 0;
 #endif
 
 
