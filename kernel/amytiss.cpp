@@ -222,7 +222,7 @@ namespace amytiss{
 
 		// the pdf as a strings	
 		std::stringstream ssE;
-		ssE << "return "  << spPdfObj->getPDFBody();
+		ssE << spPdfObj->getPDFBody();
 		std::string strRet = ssE.str();
 		return strRet;
 	}
@@ -392,10 +392,8 @@ namespace amytiss{
 		time_steps = (size_t)m_spCfg->readConfigValueInt(AMYTISS_CONFIG_PARAM_specs_time_steps);
 
 
-		// TODO: allow, based on the config from the user, to change the type of the PDF
-		spPdfObj = std::static_pointer_cast<amytissPDF>(
-			std::make_shared<amytissPDF_NormalDistribution>(m_spCfg, ssDim, ssEta, ssLb ,ssUb)
-		);
+		// based on the config from the user, get a PDF
+		spPdfObj = amytissPDF::constructPDF(m_spCfg, ssDim, ssEta, ssLb, ssUb);
 
 
 		// TASK1: Updating the params

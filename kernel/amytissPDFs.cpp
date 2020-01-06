@@ -10,12 +10,101 @@
 
 namespace amytiss{
 
+std::string to_string(NOISE_TYPE ntype) {
+    switch (ntype) {
+        case NOISE_TYPE::ADDITIVE: {
+            return "additive";
+        }
+        case NOISE_TYPE::MULTIPLICATIVE: {
+            return "multiplicative";
+        }
+        default:
+            throw std::runtime_error("Invalid NOISE_TYPE.");
+    }
+}
+NOISE_TYPE parse_noise_type(std::string strNtype) {
+    if (strNtype == to_string(NOISE_TYPE::ADDITIVE))
+        return NOISE_TYPE::ADDITIVE;
+    if (strNtype == to_string(NOISE_TYPE::MULTIPLICATIVE))
+        return NOISE_TYPE::MULTIPLICATIVE;
+    throw std::runtime_error(std::string("Unidentified NOISE_TYPE: ") + strNtype);
+}
+
+std::string to_string(PDF_CLASS pclass) {
+    switch (pclass) {
+        case PDF_CLASS::NORMAL_DISTRIBUTION:{
+            return "normal_distribution";
+        }
+        case PDF_CLASS::UNIFORM_DISTRIBUTION: {
+            return "uniform_distribution";
+        }
+        case PDF_CLASS::EXPONENTIAL_DISTRIBUTION: {
+            return "exponential_distribution";
+        }
+        default:
+            throw std::runtime_error("Invalid PDF_CLASS.");
+    }
+}
+PDF_CLASS parse_pdf_class(std::string strPclass) {
+    if (strPclass == to_string(PDF_CLASS::NORMAL_DISTRIBUTION))
+        return PDF_CLASS::NORMAL_DISTRIBUTION;
+    if (strPclass == to_string(PDF_CLASS::UNIFORM_DISTRIBUTION))
+        return PDF_CLASS::UNIFORM_DISTRIBUTION;
+    if (strPclass == to_string(PDF_CLASS::EXPONENTIAL_DISTRIBUTION))
+        return PDF_CLASS::EXPONENTIAL_DISTRIBUTION;
+    throw std::runtime_error(std::string("Unidentified PDF_CLASS: ") + strPclass);
+}
+
+std::string to_string(PDF_TRUNCATION tmode) {
+    switch (tmode) {
+        case PDF_TRUNCATION::NO_TRUNCATION:{
+            return "no_truncation";
+        }
+        case PDF_TRUNCATION::FIXED_TRUNCATION: {
+            return "fixed_truncation";
+        }
+        case PDF_TRUNCATION::CUTTING_PROBABILITY: {
+            return "cutting_probability";
+        }
+        default:
+            throw std::runtime_error("Invalid PDF_TRUNCATION.");
+    }
+}
+PDF_TRUNCATION parse_pdf_truncation(std::string strTmode) {
+    if (strTmode == to_string(PDF_TRUNCATION::NO_TRUNCATION))
+        return PDF_TRUNCATION::NO_TRUNCATION;
+    if (strTmode == to_string(PDF_TRUNCATION::FIXED_TRUNCATION))
+        return PDF_TRUNCATION::FIXED_TRUNCATION;
+    if (strTmode == to_string(PDF_TRUNCATION::CUTTING_PROBABILITY))
+        return PDF_TRUNCATION::CUTTING_PROBABILITY;
+    throw std::runtime_error(std::string("Unidentified PDF_TRUNCATION: ") + strTmode);
+}
+
 // class: amytissPDF
 //---------------------------
+#define AMYTISS_CONFIG_PARAM_noise_type	"noise.type"
+#define AMYTISS_CONFIG_PARAM_noise_pdf_class	"noise.pdf_class"
+#define AMYTISS_CONFIG_PARAM_noise_pdf_truncation	"noise.pdf_truncation"
+std::shared_ptr<amytissPDF> amytissPDF::constructPDF(const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim,
+    const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb) {
+
+    PDF_CLASS pdf_class = parse_pdf_class(_spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_pdf_class));
+
+    if(pdf_class == PDF_CLASS::NORMAL_DISTRIBUTION)
+        return std::make_shared<amytissPDF_NormalDistribution>(_spCfg, _ssDim, _ssEta, _ssLb, _ssUb);
+
+    if (pdf_class == PDF_CLASS::UNIFORM_DISTRIBUTION)
+        return std::make_shared<amytissPDF_UniformDistribution>(_spCfg, _ssDim, _ssEta, _ssLb, _ssUb);
+
+    if (pdf_class == PDF_CLASS::EXPONENTIAL_DISTRIBUTION)
+        return std::make_shared<amytissPDF_ExponentialDistribution>(_spCfg, _ssDim, _ssEta, _ssLb, _ssUb);
+
+    throw std::runtime_error("Invalid type of PDF.");
+}
 amytissPDF::amytissPDF(
     const std::shared_ptr<pfacesConfigurationReader> _spCfg,
     size_t _ssDim, 
-    const std::vector<concrete_t> _ssEta, const std::vector<concrete_t> _ssLb, const std::vector<concrete_t> _ssUb){
+    const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb){
         
     spCfg = _spCfg;
     ssDim = _ssDim;
@@ -23,7 +112,12 @@ amytissPDF::amytissPDF(
     ssLb = _ssLb;
     ssUb = _ssUb;
 
-    trunc_mode = PDF_TRUNCATION_MODE::NO_TRUNCATION;         
+    noise_type = parse_noise_type(_spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_type));
+    pdf_class = parse_pdf_class(_spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_pdf_class));
+    trunc_mode = parse_pdf_truncation(_spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_pdf_truncation));
+
+    if (noise_type == NOISE_TYPE::MULTIPLICATIVE && trunc_mode != PDF_TRUNCATION::NO_TRUNCATION)
+        throw std::runtime_error("For multiplicative noise, only 'no_truncation' is allowed for PDF truncation.");
 }
 amytissPDF::~amytissPDF(){}
 
@@ -40,7 +134,7 @@ amytissPDF::~amytissPDF(){}
 
 amytissPDF_NormalDistribution::amytissPDF_NormalDistribution(
     const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim, 
-    const std::vector<concrete_t> _ssEta, const std::vector<concrete_t> _ssLb, const std::vector<concrete_t> _ssUb)
+    const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb)
 :amytissPDF(_spCfg, _ssDim, _ssEta, _ssLb, _ssUb){   
 
     det_covar_matrix = _spCfg->readConfigValueReal(AMYTISS_CONFIG_PARAM_noise_det_covariance_matrix);
@@ -50,7 +144,13 @@ amytissPDF_NormalDistribution::amytissPDF_NormalDistribution(
 
     // Fixed truncation ?
     if (cutting_region != std::string("") && cutting_probability == 0) {
-        trunc_mode =  PDF_TRUNCATION_MODE::FIXED_TRUNCATION;
+        if (trunc_mode != PDF_TRUNCATION::FIXED_TRUNCATION) {
+            trunc_mode = PDF_TRUNCATION::FIXED_TRUNCATION;
+            pfacesTerminal::showInfoMessage(
+                std::string("PDF truncation is set to fixed_truncation as you provided a specific cutting region: ") +
+                cutting_region
+            );
+        }
         cutting_region = pfacesUtils::strReplaceAll(cutting_region, "{", "");
         cutting_region = pfacesUtils::strReplaceAll(cutting_region, "}", "");
 
@@ -66,9 +166,18 @@ amytissPDF_NormalDistribution::amytissPDF_NormalDistribution(
 
     // cutting probability based or no truncation ?
     if (cutting_region == std::string("") && cutting_probability != 0){
-        trunc_mode = PDF_TRUNCATION_MODE::CUTTING_PROBABILITY;
+        if (trunc_mode != PDF_TRUNCATION::CUTTING_PROBABILITY) {
+            trunc_mode = PDF_TRUNCATION::CUTTING_PROBABILITY;
+            pfacesTerminal::showInfoMessage(
+                std::string("PDF truncation is set to cutting_probability as you provided a specific cutting probability level: ") +
+                std::to_string(cutting_probability)
+            );
+        }
     } else {
-        trunc_mode = PDF_TRUNCATION_MODE::NO_TRUNCATION;
+        if (trunc_mode != PDF_TRUNCATION::NO_TRUNCATION) {
+            trunc_mode = PDF_TRUNCATION::NO_TRUNCATION;
+            pfacesTerminal::showInfoMessage("PDF truncation is set to no_truncation as you did provided any specific cutting probability level or cutting region.");
+        }
     }
 
     std::vector<concrete_t> tmp_covar_line = 
@@ -134,7 +243,7 @@ amytissPDF_NormalDistribution::getPDFBody(){
 
 		// the pdf as a strings	
 		std::stringstream ssE;
-		ssE << val << "*exp((float)(" << e << "));";
+		ssE << "return " << val << "*exp((float)(" << e << "));";
 		std::string strRet = ssE.str();
 
 		return strRet;
@@ -178,19 +287,19 @@ amytissPDF_NormalDistribution::getOriginatedCuttingBound(){
 
 
     switch(trunc_mode){
-        case PDF_TRUNCATION_MODE::NO_TRUNCATION:{
+        case PDF_TRUNCATION::NO_TRUNCATION:{
             cuttingBoundsLb = ssLb;
 			cuttingBoundsUb = ssUb;        
             break;
         }
 
-        case PDF_TRUNCATION_MODE::FIXED_TRUNCATION:{
+        case PDF_TRUNCATION::FIXED_TRUNCATION:{
             cuttingBoundsLb = fixed_cutting_region_lb;
 			cuttingBoundsUb = fixed_cutting_region_ub;
             break;
         }
 
-        case PDF_TRUNCATION_MODE::CUTTING_PROBABILITY:{
+        case PDF_TRUNCATION::CUTTING_PROBABILITY:{
             // get the originated (centered at 0) cutting bound that does not consider the effect of W on the dynamics
             std::vector<concrete_t> positiveCuttingBounds = 
                 amytissGetPositiveZeroOriginatedCuttingBounds();
@@ -225,5 +334,105 @@ void amytissPDF_NormalDistribution::addToOutputFileMetadata(StringDataDictionary
     metadata.push_back(std::make_pair(OUT_FILE_PARAM_CUTTING_PROP,
         spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_cutting_probability)));
 }
+
+
+
+// class: amytissPDF_UniformDistribution
+//---------------------------
+#define AMYTISS_CONFIG_PARAM_noise_active_region	"noise.active_region"
+#define OUT_FILE_PARAM_PDF_AMPLITUDE "pdf-amplitude"
+amytissPDF_UniformDistribution::amytissPDF_UniformDistribution(
+    const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim,
+    const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb)
+    :amytissPDF(_spCfg, _ssDim, _ssEta, _ssLb, _ssUb) {
+
+    // check if an active region is provided
+    std::string active_region = _spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_cutting_region);
+    if (active_region.empty() || active_region == std::string(""))
+        throw std::runtime_error("For uniform distribution, you must provide an active_region in which the PDF is non-zero.");
+
+    // parsing the active region
+    active_region = pfacesUtils::strReplaceAll(active_region, "{", "");
+    active_region = pfacesUtils::strReplaceAll(active_region, "}", "");
+    std::vector<concrete_t> vals = pfacesUtils::sStr2Vector<concrete_t>(active_region);
+    if (vals.size() != ssDim * 2)
+        throw std::runtime_error("amytissPDF_UniformDistribution: Invalid number of elemenmts in the provided active region.");
+
+    for (size_t i = 0; i < ssDim; i++) {
+        active_region_lb.push_back(vals[2 * i + 0]);
+        active_region_ub.push_back(vals[2 * i + 1]);
+
+        if ((active_region_lb[i] > active_region_ub[i]) || (active_region_ub[i] != -1*active_region_lb[i]))
+            throw std::runtime_error("amytissPDF_UniformDistribution: Invalid active region: it must be symmetric around the origin.");
+    }
+
+    // truncation mode is always fixed and will be set to the active region
+    trunc_mode = PDF_TRUNCATION::FIXED_TRUNCATION;
+
+    // computing the pdf amplitude
+    concrete_t active_region_volume = 1;
+    for (size_t i = 0; i < ssDim; i++){
+        active_region_volume *= active_region_ub[i] - active_region_lb[i];
+    }
+    amplitude = 1.0/active_region_volume;
+}
+
+std::string
+amytissPDF_UniformDistribution::getAdditionalDefines() {
+    return "";
+}
+
+std::string
+amytissPDF_UniformDistribution::getPDFBody() {
+
+    // the pdf as a strings	
+    std::stringstream ssE;
+    ssE << amplitude << ";";
+    std::string strRet = ssE.str();
+
+    return strRet;
+}
+
+std::pair<std::vector<concrete_t>, std::vector<concrete_t>>
+amytissPDF_UniformDistribution::getOriginatedCuttingBound() {
+    return std::make_pair(active_region_lb, active_region_ub);
+}
+
+void amytissPDF_UniformDistribution::addToOutputFileMetadata(StringDataDictionary& metadata) {
+    metadata.push_back(std::make_pair(OUT_FILE_PARAM_PDF_AMPLITUDE,std::to_string(amplitude)));
+}
+
+
+// class: amytissPDF_ExponentialDistribution
+//---------------------------
+amytissPDF_ExponentialDistribution::amytissPDF_ExponentialDistribution(
+    const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim,
+    const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb)
+    :amytissPDF(_spCfg, _ssDim, _ssEta, _ssLb, _ssUb) {
+    throw std::runtime_error("Not yet implemented !");
+}
+
+std::string
+amytissPDF_ExponentialDistribution::getAdditionalDefines() {
+    return "";
+}
+
+std::string
+amytissPDF_ExponentialDistribution::getPDFBody() {
+    return "";
+}
+
+std::pair<std::vector<concrete_t>, std::vector<concrete_t>>
+amytissPDF_ExponentialDistribution::getOriginatedCuttingBound() {
+    std::vector<concrete_t> empty;
+    return std::make_pair(empty, empty);
+}
+
+void amytissPDF_ExponentialDistribution::addToOutputFileMetadata(StringDataDictionary& metadata) {
+    (void)metadata;
+}
+
+
+
 
 }

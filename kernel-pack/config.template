@@ -57,6 +57,9 @@ post_dynamics.code_after = string
 # Noise information
 #-----------------------------------------------------------------------
 noise = scope
+noise.type = string
+noise.pdf_class = string
+noise.pdf_truncation = string
 noise.inv_covariance_matrix = string
 noise.det_covariance_matrix = string
 noise.cutting_probability = string

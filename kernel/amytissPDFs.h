@@ -7,28 +7,58 @@
 
 namespace amytiss{
 
-// the truncation mode requesteed from the PDF object will be long to one of the 
+// the type of noise
+enum class NOISE_TYPE {
+    ADDITIVE,
+    MULTIPLICATIVE
+};
+std::string to_string(NOISE_TYPE ntype);
+NOISE_TYPE parse_noise_type(std::string strNtype);
+
+// the class of PDF
+enum class PDF_CLASS {
+    NORMAL_DISTRIBUTION,
+    UNIFORM_DISTRIBUTION,
+    EXPONENTIAL_DISTRIBUTION
+};
+std::string to_string(PDF_CLASS pclass);
+PDF_CLASS parse_pdf_class(std::string strPclass);
+
+// the truncation mode requesteed from the PDF object will be long to one of the    
 // following types
-enum class PDF_TRUNCATION_MODE{
+enum class PDF_TRUNCATION {
     NO_TRUNCATION,
     FIXED_TRUNCATION,
     CUTTING_PROBABILITY
 };
+std::string to_string(PDF_TRUNCATION tmode);
+PDF_TRUNCATION parse_pdf_truncation(std::string strTmode);
 
 // an abstract class to represent a unified interface for the structure of PDFs to be 
 // implemented in AMYTISS.
 class amytissPDF{
+public:
+    /* this function creates dynamically a PDF of different classes based on the provided config */
+    static std::shared_ptr<amytissPDF> constructPDF(
+        const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim,
+        const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb
+        );
+
 protected:
     std::shared_ptr<pfacesConfigurationReader> spCfg;
 
     size_t ssDim;
     std::vector<concrete_t> ssEta, ssLb, ssUb;
 
-    PDF_TRUNCATION_MODE trunc_mode;
+    NOISE_TYPE noise_type;
+    PDF_CLASS pdf_class;
+    PDF_TRUNCATION trunc_mode;
+
 public:
     // to save the config locally for future use
     amytissPDF(const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim, 
-    const std::vector<concrete_t> _ssEta, const std::vector<concrete_t> _ssLb, const std::vector<concrete_t> _ssUb);
+        const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb
+    );
     virtual ~amytissPDF()=0;
 
     // will be called to ask the concrete class to declare any additional defies required
@@ -57,7 +87,6 @@ public:
 
 };
 
-
 // PDF:: Normal Distribution
 // ------------------------------
 class amytissPDF_NormalDistribution : public amytissPDF {
@@ -74,7 +103,41 @@ class amytissPDF_NormalDistribution : public amytissPDF {
 
 public:
     amytissPDF_NormalDistribution(const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim, 
-    const std::vector<concrete_t> _ssEta, const std::vector<concrete_t> _ssLb, const std::vector<concrete_t> _ssUb);
+    const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb);
+
+    std::string getAdditionalDefines();
+    std::string getPDFBody();
+    std::pair<std::vector<concrete_t>, std::vector<concrete_t>> getOriginatedCuttingBound();
+    void addToOutputFileMetadata(StringDataDictionary& metadata);
+};
+
+
+// PDF:: Uniform Distribution
+// ------------------------------
+class amytissPDF_UniformDistribution : public amytissPDF {
+
+    concrete_t amplitude;
+
+    std::vector<concrete_t> active_region_lb;
+    std::vector<concrete_t> active_region_ub;
+
+
+public:
+    amytissPDF_UniformDistribution(const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim,
+        const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb);
+
+    std::string getAdditionalDefines();
+    std::string getPDFBody();
+    std::pair<std::vector<concrete_t>, std::vector<concrete_t>> getOriginatedCuttingBound();
+    void addToOutputFileMetadata(StringDataDictionary& metadata);
+};
+
+// PDF:: Exponential Distribution
+// ------------------------------
+class amytissPDF_ExponentialDistribution : public amytissPDF {
+public:
+    amytissPDF_ExponentialDistribution(const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim,
+        const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb);
 
     std::string getAdditionalDefines();
     std::string getPDFBody();
