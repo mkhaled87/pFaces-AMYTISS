@@ -227,9 +227,9 @@ void compute_probabilities(__global xu_bag_t* XU_bag, const concrete_t* x, const
 	__private concrete_t w_concrete[wsDim];
 	__private concrete_t Mu[ssDim];
 	__private concrete_t Mu_w0[ssDim];
-	__private concrete_t containingCuttingRegionLb_org[ssDim] = CUTTING_BOUND_INCLUDING_W_EFFECT_LB;
-	__private concrete_t containingCuttingRegionUb_org[ssDim] = CUTTING_BOUND_INCLUDING_W_EFFECT_UB;
-	__private symbolic_t containingCuttingRegionWidths[ssDim] = CONTAINING_REGION_WIDTHS;
+	__private concrete_t containingCuttingRegionLb_org[ssDim] = CUTTING_REGION_LB;
+	__private concrete_t containingCuttingRegionUb_org[ssDim] = CUTTING_REGION_UB;
+	__private symbolic_t containingCuttingRegionWidths[ssDim] = CUTTING_REGION_WIDTHS;
 	__private concrete_t containingCuttingRegionLb[ssDim];
 	__private concrete_t containingCuttingRegionUb[ssDim];
 	__private symbolic_t x_post_symbolic[ssDim];

@@ -64,6 +64,7 @@ noise.inv_covariance_matrix = string
 noise.det_covariance_matrix = string
 noise.cutting_probability = string
 noise.cutting_region = string
+noise.active_region = string
 
 
 #-----------------------------------------------------------------------

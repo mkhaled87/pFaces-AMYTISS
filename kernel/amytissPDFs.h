@@ -19,7 +19,8 @@ NOISE_TYPE parse_noise_type(std::string strNtype);
 enum class PDF_CLASS {
     NORMAL_DISTRIBUTION,
     UNIFORM_DISTRIBUTION,
-    EXPONENTIAL_DISTRIBUTION
+    EXPONENTIAL_DISTRIBUTION,
+    CUSTOM
 };
 std::string to_string(PDF_CLASS pclass);
 PDF_CLASS parse_pdf_class(std::string strPclass);
@@ -60,6 +61,7 @@ public:
         const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb
     );
     virtual ~amytissPDF()=0;
+    PDF_CLASS getClass();
 
     // will be called to ask the concrete class to declare any additional defies required
     // for computing by the symbolic PDF in the CL code
@@ -137,6 +139,21 @@ public:
 class amytissPDF_ExponentialDistribution : public amytissPDF {
 public:
     amytissPDF_ExponentialDistribution(const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim,
+        const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb);
+
+    std::string getAdditionalDefines();
+    std::string getPDFBody();
+    std::pair<std::vector<concrete_t>, std::vector<concrete_t>> getOriginatedCuttingBound();
+    void addToOutputFileMetadata(StringDataDictionary& metadata);
+};
+
+// PDF:: Custom
+// ------------------------------
+class amytissPDF_Custom : public amytissPDF {
+    std::vector<concrete_t> ssLb;
+    std::vector<concrete_t> ssUb;
+public:
+    amytissPDF_Custom(const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim,
         const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb);
 
     std::string getAdditionalDefines();
