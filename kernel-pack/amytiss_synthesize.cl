@@ -25,9 +25,9 @@ __kernel void synthesize(__global xu_bag_t* XU_bags, __global concrete_t* V) {
 	__private concrete_t x_concrete[ssDim];			
 	__private symbolic_t u_symbolic[isDim];
 	__private concrete_t u_concrete[isDim];	
-	__private concrete_t containingCuttingRegionLb_org[ssDim] = CUTTING_BOUND_INCLUDING_W_EFFECT_LB;
-	__private concrete_t containingCuttingRegionUb_org[ssDim] = CUTTING_BOUND_INCLUDING_W_EFFECT_UB;
-	__private symbolic_t containingCuttingRegionWidths[ssDim] = CONTAINING_REGION_WIDTHS;
+	__private concrete_t containingCuttingRegionLb_org[ssDim] = CUTTING_REGION_LB;
+	__private concrete_t containingCuttingRegionUb_org[ssDim] = CUTTING_REGION_UB;
+	__private symbolic_t containingCuttingRegionWidths[ssDim] = CUTTING_REGION_WIDTHS;
 	__private concrete_t containingCuttingRegionLb[ssDim];
 	__private concrete_t containingCuttingRegionUb[ssDim];
 	__private concrete_t w_concrete[wsDim];

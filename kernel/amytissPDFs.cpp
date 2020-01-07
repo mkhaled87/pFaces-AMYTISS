@@ -41,6 +41,9 @@ std::string to_string(PDF_CLASS pclass) {
         case PDF_CLASS::EXPONENTIAL_DISTRIBUTION: {
             return "exponential_distribution";
         }
+        case PDF_CLASS::CUSTOM: {
+            return "custom";
+        }
         default:
             throw std::runtime_error("Invalid PDF_CLASS.");
     }
@@ -120,6 +123,9 @@ amytissPDF::amytissPDF(
         throw std::runtime_error("For multiplicative noise, only 'no_truncation' is allowed for PDF truncation.");
 }
 amytissPDF::~amytissPDF(){}
+PDF_CLASS amytissPDF::getClass() {
+    return pdf_class;
+}
 
 
 // class: amytissPDF_NormalDistribution
@@ -433,6 +439,35 @@ void amytissPDF_ExponentialDistribution::addToOutputFileMetadata(StringDataDicti
 }
 
 
+// class: amytissPDF_Custom
+//---------------------------
+amytissPDF_Custom::amytissPDF_Custom(
+    const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim,
+    const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb)
+    :amytissPDF(_spCfg, _ssDim, _ssEta, _ssLb, _ssUb) {
+    ssLb = _ssLb;
+    ssUb = _ssUb;
+    trunc_mode = PDF_TRUNCATION::NO_TRUNCATION;
+}
+
+std::string
+amytissPDF_Custom::getAdditionalDefines() {
+    return "#include \"custom_pdf.cl\"";
+}
+
+std::string
+amytissPDF_Custom::getPDFBody() {
+    return "return custom_pdf(x, Mu);";
+}
+
+std::pair<std::vector<concrete_t>, std::vector<concrete_t>>
+amytissPDF_Custom::getOriginatedCuttingBound() {
+    return std::make_pair(ssLb, ssUb);
+}
+
+void amytissPDF_Custom::addToOutputFileMetadata(StringDataDictionary& metadata) {
+    (void)metadata;
+}
 
 
 }

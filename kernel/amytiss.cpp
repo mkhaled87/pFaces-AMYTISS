@@ -230,6 +230,10 @@ namespace amytiss{
 	// this gets some defines to be used by the pdf
 	std::string amytissKernel::amytissGetPdfDefines() {
 
+		// no defines are rquired if the PDF is custom since the user will provde all of this
+		if (spPdfObj->getClass() == PDF_CLASS::CUSTOM)
+			return "";
+
 		std::stringstream ssE;
 
 		// collect and check
@@ -246,10 +250,10 @@ namespace amytiss{
 
 		// the cutting region
 		ssE << "/* the cutting bounds of the PDF */"  << std::endl;
-		ssE << "#define CUTTING_BOUND_INCLUDING_W_EFFECT_LB {";
+		ssE << "#define CUTTING_REGION_LB {";
 		ssE << pfacesUtils::vector2string(orgCuttingBoundsLb);
 		ssE << "}" << std::endl;
-		ssE << "#define CUTTING_BOUND_INCLUDING_W_EFFECT_UB {";
+		ssE << "#define CUTTING_REGION_UB {";
 		ssE << pfacesUtils::vector2string(orgCuttingBoundsUb);
 		ssE << "}" << std::endl;
 
@@ -260,7 +264,7 @@ namespace amytiss{
 				orgCuttingBoundsLb, orgCuttingBoundsUb, {}, contaningCuttingRegionWidths));
 		ssE << "/* number of symbols in the cutting region */"  << std::endl;
 		ssE << "#define NUM_REACH_STATES " << num_symbols_containing_region << std::endl;
-		ssE << "#define CONTAINING_REGION_WIDTHS {" << pfacesUtils::vector2string(contaningCuttingRegionWidths) << "}" << std::endl;
+		ssE << "#define CUTTING_REGION_WIDTHS {" << pfacesUtils::vector2string(contaningCuttingRegionWidths) << "}" << std::endl;
 
 		// extra deffines
 		ssE << "/* extra defines requested by the PDF */"  << std::endl;
