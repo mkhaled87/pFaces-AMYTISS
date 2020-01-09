@@ -249,7 +249,7 @@ namespace amytiss{
 				throw std::runtime_error("amytissKernel::amytissGetPdfDefines: the LB/UB of the cutting region is invalid: the LB should be smaller than or equal to the UB.");
 
 		// the noise type
-		if (spPdfObj->getType() == NOISE_TYPE::MULTIPLICATIVE) {
+		if (spPdfObj->getNoiseType() == NOISE_TYPE::MULTIPLICATIVE) {
 			ssE << "#define PDF_MULTIPLICATIVE_NOISE" << std::endl;
 		} else {
 			ssE << "#define PDF_ADDITIVE_NOISE" << std::endl;

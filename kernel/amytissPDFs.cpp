@@ -123,14 +123,14 @@ amytissPDF::amytissPDF(
         throw std::runtime_error("For multiplicative noise, only 'no_truncation' is allowed for PDF truncation.");
 }
 amytissPDF::~amytissPDF(){}
-NOISE_TYPE amytissPDF::getType() {
+NOISE_TYPE amytissPDF::getNoiseType() {
     return noise_type;
 }
 PDF_CLASS amytissPDF::getClass() {
     return pdf_class;
 }
-PDF_CLASS amytissPDF::getClass() {
-    return pdf_class;
+PDF_TRUNCATION amytissPDF::getTruncationMode(){
+    return trunc_mode;
 }
 
 
