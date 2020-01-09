@@ -35,28 +35,28 @@ void sys_post(float* xp, const float* x, const float* u){
     for (int k=0; k <divider; k++){
         
 		// kinematic model for small velocities ?
-        if (fabs(x[3]) < 0.1){
+        if (fabs(xp[3]) < 0.1){
 		
-            f[0] = x[3]*cos(x[4]);
-            f[1] = x[3]*sin(x[4]);
+            f[0] = xp[3]*cos(xp[4]);
+            f[1] = xp[3]*sin(xp[4]);
             f[2] = u[0];
             f[3] = u[1];
-            f[4] = x[3]/lwb*tan(x[2]);
-            f[5] = u[1]*lwb*tan(x[2]) + x[3]/(lwb*cos(x[2])*cos(x[2]))*u[0];
+            f[4] = xp[3]/lwb*tan(xp[2]);
+            f[5] = u[1]*lwb*tan(xp[2]) + xp[3]/(lwb*cos(xp[2])*cos(xp[2]))*u[0];
             f[6] = 0;
 		}
         else{
-            f[0] = x[3]*cos(x[6] + x[4]);
-            f[1] = x[3]*sin(x[6] + x[4]);
+            f[0] = xp[3]*cos(xp[6] + xp[4]);
+            f[1] = xp[3]*sin(xp[6] + xp[4]);
             f[2] = u[0];
             f[3] = u[1];
-            f[4] = x[5];
-            f[5] = -mu*m/(x[3]*I*(lr+lf))*(lf*lf*C_Sf*(g*lr-u[1]*h) + lr*lr*C_Sr*(g*lf + u[1]*h))*x[5]
-                +mu*m/(I*(lr+lf))*(lr*C_Sr*(g*lf + u[1]*h) - lf*C_Sf*(g*lr - u[1]*h))*x[6]
-                +mu*m/(I*(lr+lf))*lf*C_Sf*(g*lr - u[1]*h)*x[2];
-            f[6] = (mu/(x[3]*x[3]*(lr+lf))*(C_Sr*(g*lf + u[1]*h)*lr - C_Sf*(g*lr - u[1]*h)*lf)-1)*x[5]
-                -mu/(x[3]*(lr+lf))*(C_Sr*(g*lf + u[1]*h) + C_Sf*(g*lr-u[1]*h))*x[6]
-                +mu/(x[3]*(lr+lf))*(C_Sf*(g*lr-u[1]*h))*x[2]; 
+            f[4] = xp[5];
+            f[5] = -mu*m/(xp[3]*I*(lr+lf))*(lf*lf*C_Sf*(g*lr-u[1]*h) + lr*lr*C_Sr*(g*lf + u[1]*h))*xp[5]
+                +mu*m/(I*(lr+lf))*(lr*C_Sr*(g*lf + u[1]*h) - lf*C_Sf*(g*lr - u[1]*h))*xp[6]
+                +mu*m/(I*(lr+lf))*lf*C_Sf*(g*lr - u[1]*h)*xp[2];
+            f[6] = (mu/(xp[3]*xp[3]*(lr+lf))*(C_Sr*(g*lf + u[1]*h)*lr - C_Sf*(g*lr - u[1]*h)*lf)-1)*xp[5]
+                -mu/(xp[3]*(lr+lf))*(C_Sr*(g*lf + u[1]*h) + C_Sf*(g*lr-u[1]*h))*xp[6]
+                +mu/(xp[3]*(lr+lf))*(C_Sf*(g*lr-u[1]*h))*xp[2]; 
         }
 		
         // post state for the given Ts

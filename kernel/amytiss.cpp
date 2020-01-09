@@ -248,7 +248,14 @@ namespace amytiss{
 			if(orgCuttingBoundsLb[i] > orgCuttingBoundsUb[i])
 				throw std::runtime_error("amytissKernel::amytissGetPdfDefines: the LB/UB of the cutting region is invalid: the LB should be smaller than or equal to the UB.");
 
-		// the cutting region
+		// the noise type
+		if (spPdfObj->getType() == NOISE_TYPE::MULTIPLICATIVE) {
+			ssE << "#define PDF_MULTIPLICATIVE_NOISE" << std::endl;
+		} else {
+			ssE << "#define PDF_ADDITIVE_NOISE" << std::endl;
+		}
+
+		// the PDF truncation
 		ssE << "/* the cutting bounds of the PDF */"  << std::endl;
 		ssE << "#define CUTTING_REGION_LB {";
 		ssE << pfacesUtils::vector2string(orgCuttingBoundsLb);
@@ -259,11 +266,11 @@ namespace amytiss{
 
 		// number of elements + widths of the region
 		std::vector<symbolic_t> contaningCuttingRegionWidths;
-		symbolic_t num_symbols_containing_region =
+		num_reach_states =
 			pfacesBigInt::getPrimitiveValue(amytissGetFlatWidthFromConcreteSpace(ssDim, ssEta,
 				orgCuttingBoundsLb, orgCuttingBoundsUb, {}, contaningCuttingRegionWidths));
 		ssE << "/* number of symbols in the cutting region */"  << std::endl;
-		ssE << "#define NUM_REACH_STATES " << num_symbols_containing_region << std::endl;
+		ssE << "#define NUM_REACH_STATES " << num_reach_states << std::endl;
 		ssE << "#define CUTTING_REGION_WIDTHS {" << pfacesUtils::vector2string(contaningCuttingRegionWidths) << "}" << std::endl;
 
 		// extra deffines
@@ -277,12 +284,12 @@ namespace amytiss{
 			amytissGetFlatWidthFromConcreteSpace(ssDim, ssEta, ssLb, ssUb, {}, dummy)
 		);
 
-		double reduction = 100.0* (1.0 - (double)num_symbols_containing_region /(double)num_ss_states);
+		double reduction = 100.0* (1.0 - (double)num_reach_states /(double)num_ss_states);
 		pfacesTerminal::showMessage(std::string("The org. cutting region (Lb):") + pfacesUtils::vector2string(orgCuttingBoundsLb));
 		pfacesTerminal::showMessage(std::string("The org. cutting region (Ub):") + pfacesUtils::vector2string(orgCuttingBoundsUb));
 		pfacesTerminal::showMessage(
 			std::string("Number of reach-states after cutting the probability: ") +
-			std::to_string(num_symbols_containing_region) + std::string(" - ") + std::to_string(std::round(reduction)) + std::string("% reduction.")
+			std::to_string(num_reach_states) + std::string(" - ") + std::to_string(std::round(reduction)) + std::string("% reduction.")
 		);
 
 		if (saveP && num_reach_states > 256)
@@ -685,6 +692,10 @@ namespace amytiss{
 		if (!extra_inc_files.empty()) {
 			std::stringstream ss_rep_inc_files;
 			std::string CFG_DIR = pfacesFileIO::getFileDirectoryPath(m_spCfg->getConfigFilePath());
+			if (CFG_DIR.empty() || CFG_DIR == std::string("")) {
+				CFG_DIR = std::string(".") + std::string(PFACES_PATH_SPLITTER);
+			}
+
 			std::vector<std::string> file_names = pfacesUtils::strSplit(extra_inc_files, ";", false);
 			for (size_t i = 0; i < file_names.size(); i++) {
 				string expanded_file_names = file_names[i];
@@ -697,7 +708,6 @@ namespace amytiss{
 				}
 				std::string file_dir = pfacesFileIO::getFileDirectoryPath(expanded_file_names);
 				extra_inc_dir += std::string(" -I") + file_dir;
-
 				file_names[i] = pfacesUtils::strReplaceAll(expanded_file_names, file_dir, "");
 				file_names[i] = pfacesUtils::strReplaceAll(file_names[i], "\\", "");
 				file_names[i] = pfacesUtils::strReplaceAll(file_names[i], "/", "");
@@ -707,6 +717,7 @@ namespace amytiss{
 		}
 		params.push_back(AMYTISS_KERNEL_PARAM_EXTRA_INC_FILES);
 		paramvals.push_back(rep_inc_files);
+
 
 		// updating the list of params
 		updatePrameters(params, paramvals);
@@ -797,6 +808,8 @@ namespace amytiss{
 			std::string msg = ssMsg.str();
 			pfacesTerminal::showWarnMessage(msg);
 		}
+
+		pfacesTerminal::showMessage("Done configuring the AMYTISS kernel.");
 	}
 
 	/* providing implementation of the virtual method: configureParallelProgram*/

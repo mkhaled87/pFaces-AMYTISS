@@ -1,8 +1,8 @@
 % configurations for the simulation
-addpath('../interface/');
-filename = 'traffic5.raw';
-x0 = [5 5 5 5 5];
-num_simulations = 10;
+addpath('../../interface/');
+filename = 'traffic3.raw';
+x0 = [4 4 4];
+num_simulations = 100;
 
 % reading values from the date file
 toy2dDataFile = DataFile(filename, true, true);
@@ -43,11 +43,12 @@ for k=1:num_simulations
         if(~isInsideHyberRect(x,safe_hyper_rect))
             disp(['Simulation #' num2str(k) ': failed!']);
             failed = true;
-        end
-        if(failed)
-            continue;
+            break;
         end
     end
+    if(failed)
+        continue;
+    end    
     for d = 1:ss_dim
         subplot(max(ss_dim,is_dim),2,2*d-1);
         hold on;

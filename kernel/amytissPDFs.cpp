@@ -123,6 +123,12 @@ amytissPDF::amytissPDF(
         throw std::runtime_error("For multiplicative noise, only 'no_truncation' is allowed for PDF truncation.");
 }
 amytissPDF::~amytissPDF(){}
+NOISE_TYPE amytissPDF::getType() {
+    return noise_type;
+}
+PDF_CLASS amytissPDF::getClass() {
+    return pdf_class;
+}
 PDF_CLASS amytissPDF::getClass() {
     return pdf_class;
 }
@@ -235,7 +241,9 @@ amytissPDF_NormalDistribution::getAdditionalDefines(){
 std::string 
 amytissPDF_NormalDistribution::getPDFBody(){
 
-        pfacesTerminal::showMessage(std::string("Computing the probability distribution function (PDF) symbolically .... "));
+        pfacesTerminal::showMessage(std::string("Computing the probability distribution function (PDF) symbolically .... "), false);
+        pfacesTimer timer;
+        timer.tic();
 
 		// required symbic vectors/matricies
 		Symbolic x("x", (int)ssDim);
@@ -251,6 +259,9 @@ amytissPDF_NormalDistribution::getPDFBody(){
 		std::stringstream ssE;
 		ssE << "return " << val << "*exp((float)(" << e << "));";
 		std::string strRet = ssE.str();
+
+        double time = timer.toc().count();
+        pfacesTerminal::showMessage(std::string("done ! [") + std::to_string(time) + std::string(" seconds]"));
 
 		return strRet;
 }
