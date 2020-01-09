@@ -61,6 +61,8 @@ public:
         const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb
     );
     virtual ~amytissPDF()=0;
+    NOISE_TYPE getType();
+    PDF_CLASS getClass();
     PDF_CLASS getClass();
 
     // will be called to ask the concrete class to declare any additional defies required
