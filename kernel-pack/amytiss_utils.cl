@@ -99,34 +99,6 @@ char is_avoid(const concrete_t * x) {
 #define x20 x[20]
 #define x21 x[21]
 
-/* deffines for states, inputs and disturbances to make life easier (add more if needed) */
-#define Mu0 Mu[0]
-#define Mu1 Mu[1]
-#define Mu2 Mu[2]
-#define Mu3 Mu[3]
-#define Mu4 Mu[4]
-#define Mu5 Mu[5]
-#define Mu6 Mu[6]
-#define Mu7 Mu[7]
-#define Mu8 Mu[8]
-#define Mu9 Mu[9]
-#define Mu10 Mu[10]
-#define Mu11 Mu[11]
-#define Mu12 Mu[12]
-#define Mu13 Mu[13]
-#define Mu14 Mu[14]
-#define Mu15 Mu[15]
-#define Mu16 Mu[16]
-#define Mu17 Mu[17]
-#define Mu18 Mu[18]
-#define Mu19 Mu[19]
-#define Mu20 Mu[20]
-#define Mu21 Mu[21]
-
-#if ssDim > 22
-	#error "Please change the defines for the states above to accommodate for more state variables."
-#endif // ssDim > 22
-
 
 #define u0 u[0]
 #define u1 u[1]
@@ -182,27 +154,35 @@ typedef struct __attribute__((packed)) xu_bag {
 } xu_bag_t;
 
 
-/* the probability density function of the noise*/
-concrete_t pdf(const concrete_t* x, const concrete_t* Mu);
-concrete_t pdf(const concrete_t* x, const concrete_t* Mu) {
+/* the probability density function of the noise at specific point x in the error space */
+concrete_t pdf(const concrete_t* x);
+concrete_t pdf(const concrete_t* x) {
 	@@PDF_FUNCTION_BODY@@
 }
 
-
-/* the volume of the quantization hyper rectangle: can be used for approximated integration */
-#define PDF_BASE_VOLUME @@PDF_BASE_VOLUME@@
-
-/* the integration of the pdf based on a point x */
-concrete_t integratePdf(const concrete_t* x, const concrete_t* Mu);
-concrete_t integratePdf(const concrete_t* x, const concrete_t* Mu) {
+/* the integration of the pdf based on an error region [err_lb, err_ub] */
+concrete_t integratePdf(const concrete_t* err_lb, const concrete_t* err_ub);
+concrete_t integratePdf(const concrete_t* err_lb, const concrete_t* err_ub) {
 
 	__private concrete_t int_pdf;
+	__private concrete_t e_base_diff;
+	__private concrete_t e_base_volume;
+	__private concrete_t e_base_center[ssDim];
+
+	/* compute the volume/center of the base */
+	e_base_volume = 1.0;
+	for (unsigned int i = 0; i < ssDim; i++) {
+		e_base_diff = err_ub[i] - err_lb[i];
+		e_base_volume *= e_base_diff;
+		e_base_center[i] = err_lb[i] + e_base_diff/2.0f;
+	}
 
 	/* using Mu as a the origin of the PDF(x) and computing the integration (probability)
 	   at each state within the cutting region
 	   here the intergration is approximated by a hyper rectangle from the ground level to the
 	   PDF(x_post) value, where x_post is the center of the hyper rectangle */
-	int_pdf = pdf(x, Mu) * PDF_BASE_VOLUME;
+	
+	int_pdf = pdf(e_base_center) * e_base_volume;
 
 	return int_pdf;
 }
@@ -234,6 +214,10 @@ void compute_probabilities(__global xu_bag_t* XU_bag, const concrete_t* x, const
 	__private concrete_t containingCuttingRegionUb[ssDim];
 	__private symbolic_t x_post_symbolic[ssDim];
 	__private concrete_t x_post_concrete[ssDim];
+	__private concrete_t x_post_concrete_lb[ssDim];
+	__private concrete_t x_post_concrete_ub[ssDim];
+	__private concrete_t pdf_error_lb[ssDim];
+	__private concrete_t pdf_error_ub[ssDim];
 
 #ifdef HAS_TARGET
 	if (is_target(x)) {
@@ -284,8 +268,22 @@ void compute_probabilities(__global xu_bag_t* XU_bag, const concrete_t* x, const
 			flat_to_symbolic(x_post_symbolic, ssDim, k, containingCuttingRegionWidths);
 			symbolic_to_concrete(x_post_concrete, ssDim, x_post_symbolic, containingCuttingRegionLb, containingCuttingRegionUb, ssEta);
 
+			/* compute the error wrt Mu: (x-Mu) in case of additive noise */
+			for (unsigned int i = 0; i < ssDim; i++) {
+				x_post_concrete_lb[i] = x_post_concrete[i] - ssEta[i]/2.0f;
+				x_post_concrete_ub[i] = x_post_concrete[i] + ssEta[i]/2.0f;
+
+			#ifndef PDF_MULTIPLICATIVE_NOISE
+				pdf_error_lb[i] = x_post_concrete_lb[i]-Mu[i];
+				pdf_error_ub[i] = x_post_concrete_ub[i]-Mu[i];
+			#else
+				pdf_error_lb[i] = x_post_concrete_lb[i]/Mu[i];
+				pdf_error_ub[i] = x_post_concrete_ub[i]/Mu[i];
+			#endif
+			}
+
 			/* using Mu as a the origin of the PDF(x) and computing the integration (probability) at each state within the cutting region */
-			XU_bag->Pr[w][k] = integratePdf(x_post_concrete, Mu);
+			XU_bag->Pr[w][k] = integratePdf(pdf_error_lb, pdf_error_ub);
 		}
 	}
 

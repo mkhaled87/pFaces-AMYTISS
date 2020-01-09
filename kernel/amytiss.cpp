@@ -251,8 +251,6 @@ namespace amytiss{
 		// the noise type
 		if (spPdfObj->getNoiseType() == NOISE_TYPE::MULTIPLICATIVE) {
 			ssE << "#define PDF_MULTIPLICATIVE_NOISE" << std::endl;
-		} else {
-			ssE << "#define PDF_ADDITIVE_NOISE" << std::endl;
 		}
 
 		// the PDF truncation
@@ -634,10 +632,6 @@ namespace amytiss{
 		paramvals.push_back(dynamics);
 		params.push_back(AMYTISS_KERNEL_PARAM_POST_DYNAMICS_AFTER);
 		paramvals.push_back(spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_post_dynamics_code_after));
-
-		double pdf_base_volume = pfacesUtils::vectorGetProduct(ssEta);
-		params.push_back(AMYTISS_KERNEL_PARAM_PDF_BASE_VOLUME);
-		paramvals.push_back(std::to_string(pdf_base_volume));
 
 		// noise stuff: 1- defines needed for the pdf
 		params.push_back(AMYTISS_KERNEL_PARAM_PDF_DEFINES);

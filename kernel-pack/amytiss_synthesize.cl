@@ -40,6 +40,10 @@ __kernel void synthesize(__global xu_bag_t* XU_bags, __global concrete_t* V) {
 	__private symbolic_t w_symbolic[wsDim];	
 	__private symbolic_t x_post_symbolic[ssDim];
 	__private concrete_t x_post_concrete[ssDim];
+	__private concrete_t x_post_concrete_lb[ssDim];
+	__private concrete_t x_post_concrete_ub[ssDim];
+	__private concrete_t pdf_error_lb[ssDim];
+	__private concrete_t pdf_error_ub[ssDim];
 	__private concrete_t Mu[ssDim];	
 #ifdef HAS_TARGET	
 	__private concrete_t targetSetLb[ssDim] = TARGET_SET_LB;
@@ -125,8 +129,21 @@ __kernel void synthesize(__global xu_bag_t* XU_bags, __global concrete_t* V) {
 			/* compute Mu (possible post state) from current (x,u,w) */
 			post_dynamics(Mu, x_concrete, u_concrete, w_concrete);
 
+			/* compute the error wrt Mu: (x-Mu) in case of additive noise */
+			for (unsigned int j = 0; j < ssDim; j++) {
+				x_post_concrete_lb[j] = x_post_concrete[j] - ssEta[j]/2.0f;
+				x_post_concrete_ub[j] = x_post_concrete[j] + ssEta[j]/2.0f;
+			#ifndef PDF_MULTIPLICATIVE_NOISE
+				pdf_error_lb[j] = x_post_concrete_lb[j]-Mu[j];
+				pdf_error_ub[j] = x_post_concrete_ub[j]-Mu[j];
+			#else
+				pdf_error_lb[j] = x_post_concrete_lb[j]/Mu[j];
+				pdf_error_ub[j] = x_post_concrete_ub[j]/Mu[j];
+			#endif
+			}
+
 			/* using Mu as a the origin of the PDF(x) and computing the integration (probability) at the current post state */
-			p_val = integratePdf(x_post_concrete, Mu);
+			p_val = integratePdf(pdf_error_lb, pdf_error_ub);
 	#endif
 
 			/*now we find the corresponding index in V fror the current elelment in the cutting region*/
@@ -167,8 +184,21 @@ __kernel void synthesize(__global xu_bag_t* XU_bags, __global concrete_t* V) {
 			flat_to_symbolic(x_post_symbolic, ssDim, t, targetSetWidths);
 			symbolic_to_concrete(x_post_concrete, ssDim, x_post_symbolic, targetSetLb, targetSetUb, ssEta);
 
+			/* compute the error wrt Mu_w0 */
+			for (unsigned int j = 0; j < ssDim; j++) {
+				x_post_concrete_lb[j] = x_post_concrete[j] - ssEta[j]/2.0f;
+				x_post_concrete_ub[j] = x_post_concrete[j] + ssEta[j]/2.0f;
+			#ifndef PDF_MULTIPLICATIVE_NOISE
+				pdf_error_lb[j] = x_post_concrete_lb[j]-Mu_w0[j];
+				pdf_error_ub[j] = x_post_concrete_ub[j]-Mu_w0[j];
+			#else
+				pdf_error_lb[j] = x_post_concrete_lb[j]/Mu_w0[j];
+				pdf_error_ub[j] = x_post_concrete_ub[j]/Mu_w0[j];
+			#endif
+			}
+
 			/* sum the probability of this target set with widths=eta and center=x_post_concrete*/
-			sumP0 += integratePdf(x_post_concrete, Mu_w0);
+			sumP0 += integratePdf(pdf_error_lb, pdf_error_ub);
 		}
 		v_int += sumP0;
 	#endif
