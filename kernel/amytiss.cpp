@@ -241,6 +241,28 @@ namespace amytiss{
 		orgCuttingBoundsLb = pair.first;
 		orgCuttingBoundsUb = pair.second;
 
+		// add no_truncation flag + enforce all-ss 
+		if(spPdfObj->getTruncationMode() == PDF_TRUNCATION::NO_TRUNCATION){
+			
+			// is the pdf class aware of this an already set lb/ub to all-ss ?
+			bool all_ss_already_set = true;
+			for(size_t i=0; i<ssDim; i++)
+				if(orgCuttingBoundsLb[i] != ssLb[i] || orgCuttingBoundsUb[i] != ssUb[i])
+					all_ss_already_set = false;
+			
+			if(!all_ss_already_set){
+				orgCuttingBoundsLb = ssLb;
+				orgCuttingBoundsUb = ssUb;
+
+				pfacesTerminal::showWarnMessage(
+					"The pdf truncation is set to NO_TRUNCATION but the pdf object did not set the cutting bound correctly to all-state-set. "
+					"AMYTISS enforced the cutting region to all-state-set."	
+				);
+			}
+
+			ssE << "#define PDF_NO_TRUNCATION" << std::endl;
+		}
+
 		if (orgCuttingBoundsLb.size() != ssDim || orgCuttingBoundsUb.size() != ssDim)
 			throw std::runtime_error("amytissKernel::amytissGetPdfDefines: the LB/UB of the cutting region has invalid size.");
 
@@ -250,6 +272,9 @@ namespace amytiss{
 
 		// the noise type
 		if (spPdfObj->getNoiseType() == NOISE_TYPE::MULTIPLICATIVE) {
+			if(spPdfObj->getTruncationMode() != PDF_TRUNCATION::NO_TRUNCATION)
+				throw std::runtime_error("amytissKernel::amytissGetPdfDefines: For multiplicative noise, no truncation is supported as the pdf is possibily scalled differently for each state symbol and the scaling may cover the whole state set.");
+
 			ssE << "#define PDF_MULTIPLICATIVE_NOISE" << std::endl;
 		}
 

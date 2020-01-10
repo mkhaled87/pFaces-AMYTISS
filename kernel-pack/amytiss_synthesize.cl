@@ -25,11 +25,9 @@ __kernel void synthesize(__global xu_bag_t* XU_bags, __global concrete_t* V) {
 	__private concrete_t x_concrete[ssDim];			
 	__private symbolic_t u_symbolic[isDim];
 	__private concrete_t u_concrete[isDim];	
-	__private concrete_t containingCuttingRegionLb_org[ssDim] = CUTTING_REGION_LB;
-	__private concrete_t containingCuttingRegionUb_org[ssDim] = CUTTING_REGION_UB;
+	__private concrete_t containingCuttingRegionLb[ssDim] = CUTTING_REGION_LB;
+	__private concrete_t containingCuttingRegionUb[ssDim] = CUTTING_REGION_UB;
 	__private symbolic_t containingCuttingRegionWidths[ssDim] = CUTTING_REGION_WIDTHS;
-	__private concrete_t containingCuttingRegionLb[ssDim];
-	__private concrete_t containingCuttingRegionUb[ssDim];
 	__private concrete_t w_concrete[wsDim];
 	__private concrete_t Mu_w0[ssDim];
 	__private symbolic_t wSymbolsCount = WS_NUM_SYBOLS;
@@ -91,11 +89,13 @@ __kernel void synthesize(__global xu_bag_t* XU_bags, __global concrete_t* V) {
 	}
 #endif
 
-	/* compute the containing cutting region based on Mu with w = 0*/
+#ifndef PDF_NO_TRUNCATION
+	/* shift the containing cutting region based on Mu with w = 0*/
 	for (unsigned int i = 0; i < ssDim; i++) {
-		containingCuttingRegionLb[i] = containingCuttingRegionLb_org[i] + Mu_w0[i];
-		containingCuttingRegionUb[i] = containingCuttingRegionUb_org[i] + Mu_w0[i];
+		containingCuttingRegionLb[i] += Mu_w0[i];
+		containingCuttingRegionUb[i] += Mu_w0[i];
 	}	
+#endif
 
 	/* for all w symbols */
 	v_int_min = 1.0;
