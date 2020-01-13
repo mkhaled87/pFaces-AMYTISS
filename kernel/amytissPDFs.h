@@ -155,6 +155,8 @@ public:
 // class: amytissPDF_BetaDistribution
 //---------------------------
 class amytissPDF_BetaDistribution : public amytissPDF {
+    concrete_t alpha;
+    concrete_t beta;
 public:
     amytissPDF_BetaDistribution(const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim,
         const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb);
