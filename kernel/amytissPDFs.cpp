@@ -130,14 +130,14 @@ amytissPDF::amytissPDF(
         throw std::runtime_error("For multiplicative noise, only 'no_truncation' is allowed for PDF truncation.");
 }
 amytissPDF::~amytissPDF(){}
-NOISE_TYPE amytissPDF::getType() {
+NOISE_TYPE amytissPDF::getNoiseType() {
     return noise_type;
 }
 PDF_CLASS amytissPDF::getClass() {
     return pdf_class;
 }
-PDF_CLASS amytissPDF::getClass() {
-    return pdf_class;
+PDF_TRUNCATION amytissPDF::getTruncationMode(){
+    return trunc_mode;
 }
 
 
@@ -254,12 +254,10 @@ amytissPDF_NormalDistribution::getPDFBody(){
 
 		// required symbic vectors/matricies
 		Symbolic x("x", (int)ssDim);
-		Symbolic Mu("Mu", (int)ssDim);
 		Symbolic SigmaInv("SigmaInv", (int)ssDim, (int)ssDim);
 
-		// e = -0.5*(x-Mu)'*inv(Sigma)*(x-Mu)
-		Symbolic xMinusMu = x - Mu;
-		Symbolic e = -0.5 * xMinusMu.transpose() * SigmaInv * xMinusMu;
+		// e = -0.5*(x)'*inv(Sigma)*(x)
+		Symbolic e = -0.5 * x.transpose() * SigmaInv * x;
 		concrete_t val = (concrete_t)(1.0l / std::sqrt(std::pow(2.0l * M_PI, ssDim) * det_covar_matrix));
 
 		// the pdf as a strings	

@@ -62,9 +62,9 @@ public:
         const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb
     );
     virtual ~amytissPDF()=0;
-    NOISE_TYPE getType();
+    NOISE_TYPE getNoiseType();
     PDF_CLASS getClass();
-    PDF_CLASS getClass();
+    PDF_TRUNCATION getTruncationMode();
 
     // will be called to ask the concrete class to declare any additional defies required
     // for computing by the symbolic PDF in the CL code

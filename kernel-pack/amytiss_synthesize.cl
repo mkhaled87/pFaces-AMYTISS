@@ -25,11 +25,9 @@ __kernel void synthesize(__global xu_bag_t* XU_bags, __global concrete_t* V) {
 	__private concrete_t x_concrete[ssDim];			
 	__private symbolic_t u_symbolic[isDim];
 	__private concrete_t u_concrete[isDim];	
-	__private concrete_t containingCuttingRegionLb_org[ssDim] = CUTTING_REGION_LB;
-	__private concrete_t containingCuttingRegionUb_org[ssDim] = CUTTING_REGION_UB;
+	__private concrete_t containingCuttingRegionLb[ssDim] = CUTTING_REGION_LB;
+	__private concrete_t containingCuttingRegionUb[ssDim] = CUTTING_REGION_UB;
 	__private symbolic_t containingCuttingRegionWidths[ssDim] = CUTTING_REGION_WIDTHS;
-	__private concrete_t containingCuttingRegionLb[ssDim];
-	__private concrete_t containingCuttingRegionUb[ssDim];
 	__private concrete_t w_concrete[wsDim];
 	__private concrete_t Mu_w0[ssDim];
 	__private symbolic_t wSymbolsCount = WS_NUM_SYBOLS;
@@ -40,6 +38,10 @@ __kernel void synthesize(__global xu_bag_t* XU_bags, __global concrete_t* V) {
 	__private symbolic_t w_symbolic[wsDim];	
 	__private symbolic_t x_post_symbolic[ssDim];
 	__private concrete_t x_post_concrete[ssDim];
+	__private concrete_t x_post_concrete_lb[ssDim];
+	__private concrete_t x_post_concrete_ub[ssDim];
+	__private concrete_t pdf_error_lb[ssDim];
+	__private concrete_t pdf_error_ub[ssDim];
 	__private concrete_t Mu[ssDim];	
 #ifdef HAS_TARGET	
 	__private concrete_t targetSetLb[ssDim] = TARGET_SET_LB;
@@ -87,11 +89,13 @@ __kernel void synthesize(__global xu_bag_t* XU_bags, __global concrete_t* V) {
 	}
 #endif
 
-	/* compute the containing cutting region based on Mu with w = 0*/
+#ifndef PDF_NO_TRUNCATION
+	/* shift the containing cutting region based on Mu with w = 0*/
 	for (unsigned int i = 0; i < ssDim; i++) {
-		containingCuttingRegionLb[i] = containingCuttingRegionLb_org[i] + Mu_w0[i];
-		containingCuttingRegionUb[i] = containingCuttingRegionUb_org[i] + Mu_w0[i];
+		containingCuttingRegionLb[i] += Mu_w0[i];
+		containingCuttingRegionUb[i] += Mu_w0[i];
 	}	
+#endif
 
 	/* for all w symbols */
 	v_int_min = 1.0;
@@ -125,8 +129,21 @@ __kernel void synthesize(__global xu_bag_t* XU_bags, __global concrete_t* V) {
 			/* compute Mu (possible post state) from current (x,u,w) */
 			post_dynamics(Mu, x_concrete, u_concrete, w_concrete);
 
+			/* compute the error wrt Mu: (x-Mu) in case of additive noise */
+			for (unsigned int j = 0; j < ssDim; j++) {
+				x_post_concrete_lb[j] = x_post_concrete[j] - ssEta[j]/2.0f;
+				x_post_concrete_ub[j] = x_post_concrete[j] + ssEta[j]/2.0f;
+			#ifndef PDF_MULTIPLICATIVE_NOISE
+				pdf_error_lb[j] = x_post_concrete_lb[j]-Mu[j];
+				pdf_error_ub[j] = x_post_concrete_ub[j]-Mu[j];
+			#else
+				pdf_error_lb[j] = x_post_concrete_lb[j]/Mu[j];
+				pdf_error_ub[j] = x_post_concrete_ub[j]/Mu[j];
+			#endif
+			}
+
 			/* using Mu as a the origin of the PDF(x) and computing the integration (probability) at the current post state */
-			p_val = integratePdf(x_post_concrete, Mu);
+			p_val = integratePdf(pdf_error_lb, pdf_error_ub);
 	#endif
 
 			/*now we find the corresponding index in V fror the current elelment in the cutting region*/
@@ -167,8 +184,21 @@ __kernel void synthesize(__global xu_bag_t* XU_bags, __global concrete_t* V) {
 			flat_to_symbolic(x_post_symbolic, ssDim, t, targetSetWidths);
 			symbolic_to_concrete(x_post_concrete, ssDim, x_post_symbolic, targetSetLb, targetSetUb, ssEta);
 
+			/* compute the error wrt Mu_w0 */
+			for (unsigned int j = 0; j < ssDim; j++) {
+				x_post_concrete_lb[j] = x_post_concrete[j] - ssEta[j]/2.0f;
+				x_post_concrete_ub[j] = x_post_concrete[j] + ssEta[j]/2.0f;
+			#ifndef PDF_MULTIPLICATIVE_NOISE
+				pdf_error_lb[j] = x_post_concrete_lb[j]-Mu_w0[j];
+				pdf_error_ub[j] = x_post_concrete_ub[j]-Mu_w0[j];
+			#else
+				pdf_error_lb[j] = x_post_concrete_lb[j]/Mu_w0[j];
+				pdf_error_ub[j] = x_post_concrete_ub[j]/Mu_w0[j];
+			#endif
+			}
+
 			/* sum the probability of this target set with widths=eta and center=x_post_concrete*/
-			sumP0 += integratePdf(x_post_concrete, Mu_w0);
+			sumP0 += integratePdf(pdf_error_lb, pdf_error_ub);
 		}
 		v_int += sumP0;
 	#endif
