@@ -241,6 +241,28 @@ namespace amytiss{
 		orgCuttingBoundsLb = pair.first;
 		orgCuttingBoundsUb = pair.second;
 
+		// add no_truncation flag + enforce all-ss 
+		if(spPdfObj->getTruncationMode() == PDF_TRUNCATION::NO_TRUNCATION){
+			
+			// is the pdf class aware of this an already set lb/ub to all-ss ?
+			bool all_ss_already_set = true;
+			for(size_t i=0; i<ssDim; i++)
+				if(orgCuttingBoundsLb[i] != ssLb[i] || orgCuttingBoundsUb[i] != ssUb[i])
+					all_ss_already_set = false;
+			
+			if(!all_ss_already_set){
+				orgCuttingBoundsLb = ssLb;
+				orgCuttingBoundsUb = ssUb;
+
+				pfacesTerminal::showWarnMessage(
+					"The pdf truncation is set to NO_TRUNCATION but the pdf object did not set the cutting bound correctly to all-state-set. "
+					"AMYTISS enforced the cutting region to all-state-set."	
+				);
+			}
+
+			ssE << "#define PDF_NO_TRUNCATION" << std::endl;
+		}
+
 		if (orgCuttingBoundsLb.size() != ssDim || orgCuttingBoundsUb.size() != ssDim)
 			throw std::runtime_error("amytissKernel::amytissGetPdfDefines: the LB/UB of the cutting region has invalid size.");
 
@@ -249,10 +271,11 @@ namespace amytiss{
 				throw std::runtime_error("amytissKernel::amytissGetPdfDefines: the LB/UB of the cutting region is invalid: the LB should be smaller than or equal to the UB.");
 
 		// the noise type
-		if (spPdfObj->getType() == NOISE_TYPE::MULTIPLICATIVE) {
+		if (spPdfObj->getNoiseType() == NOISE_TYPE::MULTIPLICATIVE) {
+			if(spPdfObj->getTruncationMode() != PDF_TRUNCATION::NO_TRUNCATION)
+				throw std::runtime_error("amytissKernel::amytissGetPdfDefines: For multiplicative noise, no truncation is supported as the pdf is possibily scalled differently for each state symbol and the scaling may cover the whole state set.");
+
 			ssE << "#define PDF_MULTIPLICATIVE_NOISE" << std::endl;
-		} else {
-			ssE << "#define PDF_ADDITIVE_NOISE" << std::endl;
 		}
 
 		// the PDF truncation
@@ -634,10 +657,6 @@ namespace amytiss{
 		paramvals.push_back(dynamics);
 		params.push_back(AMYTISS_KERNEL_PARAM_POST_DYNAMICS_AFTER);
 		paramvals.push_back(spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_post_dynamics_code_after));
-
-		double pdf_base_volume = pfacesUtils::vectorGetProduct(ssEta);
-		params.push_back(AMYTISS_KERNEL_PARAM_PDF_BASE_VOLUME);
-		paramvals.push_back(std::to_string(pdf_base_volume));
 
 		// noise stuff: 1- defines needed for the pdf
 		params.push_back(AMYTISS_KERNEL_PARAM_PDF_DEFINES);
