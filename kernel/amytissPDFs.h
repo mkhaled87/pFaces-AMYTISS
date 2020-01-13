@@ -20,6 +20,7 @@ enum class PDF_CLASS {
     NORMAL_DISTRIBUTION,
     UNIFORM_DISTRIBUTION,
     EXPONENTIAL_DISTRIBUTION,
+    BETA_DISTRIBUTION,
     CUSTOM
 };
 std::string to_string(PDF_CLASS pclass);
@@ -139,6 +140,8 @@ public:
 // PDF:: Exponential Distribution
 // ------------------------------
 class amytissPDF_ExponentialDistribution : public amytissPDF {
+    concrete_t decay_rate;
+
 public:
     amytissPDF_ExponentialDistribution(const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim,
         const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb);
@@ -148,6 +151,20 @@ public:
     std::pair<std::vector<concrete_t>, std::vector<concrete_t>> getOriginatedCuttingBound();
     void addToOutputFileMetadata(StringDataDictionary& metadata);
 };
+
+// class: amytissPDF_BetaDistribution
+//---------------------------
+class amytissPDF_BetaDistribution : public amytissPDF {
+public:
+    amytissPDF_BetaDistribution(const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim,
+        const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb);
+
+    std::string getAdditionalDefines();
+    std::string getPDFBody();
+    std::pair<std::vector<concrete_t>, std::vector<concrete_t>> getOriginatedCuttingBound();
+    void addToOutputFileMetadata(StringDataDictionary& metadata);
+};
+
 
 // PDF:: Custom
 // ------------------------------

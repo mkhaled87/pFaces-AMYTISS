@@ -41,6 +41,9 @@ std::string to_string(PDF_CLASS pclass) {
         case PDF_CLASS::EXPONENTIAL_DISTRIBUTION: {
             return "exponential_distribution";
         }
+        case PDF_CLASS::BETA_DISTRIBUTION: {
+            return "beta_distribution";
+        }
         case PDF_CLASS::CUSTOM: {
             return "custom";
         }
@@ -55,6 +58,10 @@ PDF_CLASS parse_pdf_class(std::string strPclass) {
         return PDF_CLASS::UNIFORM_DISTRIBUTION;
     if (strPclass == to_string(PDF_CLASS::EXPONENTIAL_DISTRIBUTION))
         return PDF_CLASS::EXPONENTIAL_DISTRIBUTION;
+    if (strPclass == to_string(PDF_CLASS::BETA_DISTRIBUTION))
+        return PDF_CLASS::BETA_DISTRIBUTION;
+    if (strPclass == to_string(PDF_CLASS::CUSTOM))
+        return PDF_CLASS::CUSTOM;
     throw std::runtime_error(std::string("Unidentified PDF_CLASS: ") + strPclass);
 }
 
@@ -404,7 +411,7 @@ amytissPDF_UniformDistribution::getPDFBody() {
 
     // the pdf as a strings	
     std::stringstream ssE;
-    ssE << amplitude << ";";
+    ssE << "return " << amplitude << ";";
     std::string strRet = ssE.str();
 
     return strRet;
@@ -422,11 +429,18 @@ void amytissPDF_UniformDistribution::addToOutputFileMetadata(StringDataDictionar
 
 // class: amytissPDF_ExponentialDistribution
 //---------------------------
+#define AMYTISS_CONFIG_PARAM_noise_active_region	"noise.decay_rate"
+#define OUT_FILE_PARAM_PDF_AMPLITUDE "pdf-decay-rate"
 amytissPDF_ExponentialDistribution::amytissPDF_ExponentialDistribution(
     const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim,
     const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb)
     :amytissPDF(_spCfg, _ssDim, _ssEta, _ssLb, _ssUb) {
-    throw std::runtime_error("Not yet implemented !");
+
+    if(_ssDim > 1)
+        throw std::runtime_error("amytissPDF_ExponentialDistribution: we only support exponential distributions for one-dimensional systems.");
+
+    // truncation mode is always fixed and will be set to the active region
+    trunc_mode = PDF_TRUNCATION::NO_TRUNCATION;
 }
 
 std::string
@@ -436,7 +450,16 @@ amytissPDF_ExponentialDistribution::getAdditionalDefines() {
 
 std::string
 amytissPDF_ExponentialDistribution::getPDFBody() {
-    return "";
+
+    // the pdf as a strings	
+    std::stringstream ssE;
+    ssE << "if(x[0] < 0.0f)" << std::endl;
+    ssE << "return 0.0f;" << std::endl;
+    ssE << "else" << std::endl;
+    ssE << "return 1.0f - exp((float)(-1.0f*" << decay_rate << "*" << "x[0]));";
+    std::string strRet = ssE.str();
+
+    return strRet;
 }
 
 std::pair<std::vector<concrete_t>, std::vector<concrete_t>>
@@ -446,6 +469,35 @@ amytissPDF_ExponentialDistribution::getOriginatedCuttingBound() {
 }
 
 void amytissPDF_ExponentialDistribution::addToOutputFileMetadata(StringDataDictionary& metadata) {
+    (void)metadata;
+}
+
+// class: amytissPDF_BetaDistribution
+//---------------------------
+amytissPDF_BetaDistribution::amytissPDF_BetaDistribution(
+    const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim,
+    const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb)
+    :amytissPDF(_spCfg, _ssDim, _ssEta, _ssLb, _ssUb) {
+    throw std::runtime_error("Not yet implemented !");
+}
+
+std::string
+amytissPDF_BetaDistribution::getAdditionalDefines() {
+    return "";
+}
+
+std::string
+amytissPDF_BetaDistribution::getPDFBody() {
+    return "";
+}
+
+std::pair<std::vector<concrete_t>, std::vector<concrete_t>>
+amytissPDF_BetaDistribution::getOriginatedCuttingBound() {
+    std::vector<concrete_t> empty;
+    return std::make_pair(empty, empty);
+}
+
+void amytissPDF_BetaDistribution::addToOutputFileMetadata(StringDataDictionary& metadata) {
     (void)metadata;
 }
 
