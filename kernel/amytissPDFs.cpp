@@ -427,15 +427,18 @@ void amytissPDF_UniformDistribution::addToOutputFileMetadata(StringDataDictionar
 
 // class: amytissPDF_ExponentialDistribution
 //---------------------------
-#define AMYTISS_CONFIG_PARAM_noise_active_region	"noise.decay_rate"
-#define OUT_FILE_PARAM_PDF_AMPLITUDE "pdf-decay-rate"
+#define AMYTISS_CONFIG_PARAM_noise_decay_rate	"noise.decay_rate"
+#define OUT_FILE_PARAM_DECAY_RATE "pdf-decay-rate"
 amytissPDF_ExponentialDistribution::amytissPDF_ExponentialDistribution(
     const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim,
     const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb)
     :amytissPDF(_spCfg, _ssDim, _ssEta, _ssLb, _ssUb) {
 
     if(_ssDim > 1)
-        throw std::runtime_error("amytissPDF_ExponentialDistribution: we only support exponential distributions for one-dimensional systems.");
+        throw std::runtime_error("amytissPDF_ExponentialDistribution: we only support Exponential distributions for one-dimensional systems.");
+
+    // read the decay rate
+    decay_rate = _spCfg->readConfigValueReal(AMYTISS_CONFIG_PARAM_noise_decay_rate);
 
     // truncation mode is always fixed and will be set to the active region
     trunc_mode = PDF_TRUNCATION::NO_TRUNCATION;
@@ -467,26 +470,53 @@ amytissPDF_ExponentialDistribution::getOriginatedCuttingBound() {
 }
 
 void amytissPDF_ExponentialDistribution::addToOutputFileMetadata(StringDataDictionary& metadata) {
-    (void)metadata;
+    metadata.push_back(std::make_pair(OUT_FILE_PARAM_DECAY_RATE, std::to_string(decay_rate)));
 }
 
 // class: amytissPDF_BetaDistribution
 //---------------------------
+#define AMYTISS_CONFIG_PARAM_noise_alpha "noise.alpha"
+#define AMYTISS_CONFIG_PARAM_noise_beta "noise.beta"
+#define OUT_FILE_PARAM_alpha "pdf-alpha"
+#define OUT_FILE_PARAM_beta "pdf-beta"
 amytissPDF_BetaDistribution::amytissPDF_BetaDistribution(
     const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim,
     const std::vector<concrete_t>& _ssEta, const std::vector<concrete_t>& _ssLb, const std::vector<concrete_t>& _ssUb)
     :amytissPDF(_spCfg, _ssDim, _ssEta, _ssLb, _ssUb) {
-    throw std::runtime_error("Not yet implemented !");
+
+    if (_ssDim > 1)
+        throw std::runtime_error("amytissPDF_BetaDistribution: we only support Beta distributions for one-dimensional systems.");
+
+    // read the decay rate
+    alpha = _spCfg->readConfigValueReal(AMYTISS_CONFIG_PARAM_noise_alpha);
+    beta = _spCfg->readConfigValueReal(AMYTISS_CONFIG_PARAM_noise_beta);
+
+    // truncation mode is always fixed and will be set to the active region
+    trunc_mode = PDF_TRUNCATION::NO_TRUNCATION;
 }
 
 std::string
 amytissPDF_BetaDistribution::getAdditionalDefines() {
-    return "";
+
+    std::stringstream ssE;
+
+    ssE << "#define PDF_alpha " << alpha << std::endl;
+    ssE << "#define PDF_beta " << beta << std::endl;
+    ssE << "#define PDF_B(alpha, beta) ((tgamma((float)alpha)*tgamma((float)beta))/(tgamma((float)(alpha + beta))))" << std::endl;
+
+    std::string strRet = ssE.str();
+    return strRet;
 }
 
 std::string
 amytissPDF_BetaDistribution::getPDFBody() {
-    return "";
+    // the pdf as a strings	
+    std::stringstream ssE;
+    ssE << "if(x[0] < 0.0f)" << std::endl;
+    ssE << "return 0.0f;" << std::endl;
+    ssE << "else" << std::endl;
+    ssE << "return ((pow((float)x[0],(float)(PDF_alpha-1.0f)))*(1-x[0])*(pow((float)x[0],(float)(PDF_beta-1.0f))))/(PDF_B(PDF_alpha, PDF_beta));";
+    std::string strRet = ssE.str();
 }
 
 std::pair<std::vector<concrete_t>, std::vector<concrete_t>>
@@ -496,7 +526,8 @@ amytissPDF_BetaDistribution::getOriginatedCuttingBound() {
 }
 
 void amytissPDF_BetaDistribution::addToOutputFileMetadata(StringDataDictionary& metadata) {
-    (void)metadata;
+    metadata.push_back(std::make_pair(OUT_FILE_PARAM_alpha, std::to_string(alpha)));
+    metadata.push_back(std::make_pair(OUT_FILE_PARAM_beta, std::to_string(beta)));
 }
 
 
