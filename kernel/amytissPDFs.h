@@ -104,7 +104,7 @@ class amytissPDF_NormalDistribution : public amytissPDF {
     std::vector<concrete_t> fixed_cutting_region_ub;
 
     // some private functions
-    std::vector<concrete_t> amytissGetPositiveZeroOriginatedCuttingBounds();
+    std::vector<concrete_t> getRHSCuttingPoint();
 
 public:
     amytissPDF_NormalDistribution(const std::shared_ptr<pfacesConfigurationReader> _spCfg, size_t _ssDim, 

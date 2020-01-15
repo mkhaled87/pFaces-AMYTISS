@@ -96,7 +96,7 @@ noise{
 	pdf_truncation = "no_truncation";
 	inv_covariance_matrix = "";
 	det_covariance_matrix = "";
-	cutting_probability = "";
+	cutting_probability = "0.0";
 	cutting_region = "";
 	active_region = "";
 }

@@ -182,9 +182,8 @@ amytissPDF_NormalDistribution::amytissPDF_NormalDistribution(
             fixed_cutting_region_ub.push_back(vals[2 * i + 1]);
         }
     }    
-
-    // cutting probability based or no truncation ?
-    if (cutting_region == std::string("") && cutting_probability != 0){
+    // cutting probability based ?
+    else if (cutting_region == std::string("") && cutting_probability != 0){
         if (trunc_mode != PDF_TRUNCATION::CUTTING_PROBABILITY) {
             trunc_mode = PDF_TRUNCATION::CUTTING_PROBABILITY;
             pfacesTerminal::showInfoMessage(
@@ -192,11 +191,16 @@ amytissPDF_NormalDistribution::amytissPDF_NormalDistribution(
                 std::to_string(cutting_probability)
             );
         }
-    } else {
+    } 
+    // no truncation ?
+    else if (cutting_region == std::string("") && cutting_probability != 0) {
         if (trunc_mode != PDF_TRUNCATION::NO_TRUNCATION) {
             trunc_mode = PDF_TRUNCATION::NO_TRUNCATION;
             pfacesTerminal::showInfoMessage("PDF truncation is set to no_truncation as you did provided any specific cutting probability level or cutting region.");
         }
+    }
+    else {
+        pfacesTerminal::showInfoMessage("PDF truncation could not be identified. Please follow the rules in the README.");
     }
 
     std::vector<concrete_t> tmp_covar_line = 
@@ -274,7 +278,7 @@ amytissPDF_NormalDistribution::getPDFBody(){
 
 /* since we are dealing with symmetrix normal distribution, we can give the cutting bound as the distance from the origin */
 std::vector<concrete_t> 
-amytissPDF_NormalDistribution::amytissGetPositiveZeroOriginatedCuttingBounds() {
+amytissPDF_NormalDistribution::getRHSCuttingPoint() {
 
     std::vector<concrete_t> ret;
 
@@ -289,7 +293,7 @@ amytissPDF_NormalDistribution::amytissGetPositiveZeroOriginatedCuttingBounds() {
     concrete_t logVal = (concrete_t)(-2 * std::log(cutting_probability / val));
 
     if (logVal < 0.0)
-        throw std::runtime_error("amytissGetPositiveZeroOriginatedCuttingBounds: Invalid value for the cutting-probability. Are you setting a cutting prbability above the PDF max value ?");
+        throw std::runtime_error("amytissPDF_NormalDistribution::getRHSCuttingPoint: Invalid value for the cutting-probability. Are you setting a cutting prbability above the PDF max value ?");
 
     for (size_t i = 0; i < ssDim; i++) {
         concrete_t val = std::sqrt(logVal / inv_covar_matrix[i][i]);
@@ -323,8 +327,7 @@ amytissPDF_NormalDistribution::getOriginatedCuttingBound(){
 
         case PDF_TRUNCATION::CUTTING_PROBABILITY:{
             // get the originated (centered at 0) cutting bound that does not consider the effect of W on the dynamics
-            std::vector<concrete_t> positiveCuttingBounds = 
-                amytissGetPositiveZeroOriginatedCuttingBounds();
+            std::vector<concrete_t> positiveCuttingBounds = getRHSCuttingPoint();
 
             // assing the bounds including inflation from the disturbances
             for (size_t i = 0; i < positiveCuttingBounds.size(); i++) {
@@ -554,7 +557,8 @@ amytissPDF_Custom::getPDFBody() {
 
 std::pair<std::vector<concrete_t>, std::vector<concrete_t>>
 amytissPDF_Custom::getOriginatedCuttingBound() {
-    return std::make_pair(ssLb, ssUb);
+    std::vector<concrete_t> empty;
+    return std::make_pair(empty, empty);
 }
 
 void amytissPDF_Custom::addToOutputFileMetadata(StringDataDictionary& metadata) {
