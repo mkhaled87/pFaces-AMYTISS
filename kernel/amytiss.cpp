@@ -307,13 +307,22 @@ namespace amytiss{
 			amytissGetFlatWidthFromConcreteSpace(ssDim, ssEta, ssLb, ssUb, {}, dummy)
 		);
 
-		double reduction = 100.0* (1.0 - (double)num_reach_states /(double)num_ss_states);
-		pfacesTerminal::showMessage(std::string("The org. cutting region (Lb):") + pfacesUtils::vector2string(orgCuttingBoundsLb));
-		pfacesTerminal::showMessage(std::string("The org. cutting region (Ub):") + pfacesUtils::vector2string(orgCuttingBoundsUb));
-		pfacesTerminal::showMessage(
-			std::string("Number of reach-states after cutting the probability: ") +
-			std::to_string(num_reach_states) + std::string(" - ") + std::to_string(std::round(reduction)) + std::string("% reduction.")
-		);
+		pfacesTerminal::showMessage(std::string("Noise type: ") + amytiss::to_string(spPdfObj->getNoiseType()));
+		pfacesTerminal::showMessage(std::string("PDF class: ") + amytiss::to_string(spPdfObj->getClass()));
+		pfacesTerminal::showMessage(std::string("PDF truncation: ") + amytiss::to_string(spPdfObj->getTruncationMode()));
+
+		if (spPdfObj->getTruncationMode() != PDF_TRUNCATION::NO_TRUNCATION) {
+			double reduction = 100.0 * (1.0 - (double)num_reach_states / (double)num_ss_states);
+			pfacesTerminal::showMessage(std::string("The org. cutting region (Lb):") + pfacesUtils::vector2string(orgCuttingBoundsLb));
+			pfacesTerminal::showMessage(std::string("The org. cutting region (Ub):") + pfacesUtils::vector2string(orgCuttingBoundsUb));
+			pfacesTerminal::showMessage(
+				std::string("Number of reach-states after cutting the probability: ") +
+				std::to_string(num_reach_states) + std::string(" - ") + std::to_string(std::round(reduction)) + std::string("% reduction.")
+			);
+		}
+		else {
+			pfacesTerminal::showMessage(std::string("Number of reach-states: ") + std::to_string(num_reach_states));
+		}
 
 		if (saveP && num_reach_states > 256)
 			pfacesTerminal::showWarnMessage(
