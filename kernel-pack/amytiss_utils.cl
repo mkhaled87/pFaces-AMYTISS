@@ -277,8 +277,8 @@ void compute_probabilities(__global xu_bag_t* XU_bag, const concrete_t* x, const
 				pdf_error_lb[i] = x_post_concrete_lb[i]-Mu[i];
 				pdf_error_ub[i] = x_post_concrete_ub[i]-Mu[i];
 			#else
-				pdf_error_lb[i] = x_post_concrete_lb[i]/Mu[i];
-				pdf_error_ub[i] = x_post_concrete_ub[i]/Mu[i];
+				pdf_error_lb[i] = (x_post_concrete_lb[i]-Mu[i])/x[i];
+				pdf_error_ub[i] = (x_post_concrete_ub[i]-Mu[i])/x[i];
 			#endif
 			}
 
