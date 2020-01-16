@@ -137,8 +137,8 @@ __kernel void synthesize(__global xu_bag_t* XU_bags, __global concrete_t* V) {
 				pdf_error_lb[j] = x_post_concrete_lb[j]-Mu[j];
 				pdf_error_ub[j] = x_post_concrete_ub[j]-Mu[j];
 			#else
-				pdf_error_lb[j] = x_post_concrete_lb[j]/Mu[j];
-				pdf_error_ub[j] = x_post_concrete_ub[j]/Mu[j];
+				pdf_error_lb[j] = (x_post_concrete_lb[j]-Mu[j])/x_concrete[i];
+				pdf_error_ub[j] = (x_post_concrete_ub[j]-Mu[j])/x_concrete[i];
 			#endif
 			}
 
@@ -177,6 +177,11 @@ __kernel void synthesize(__global xu_bag_t* XU_bags, __global concrete_t* V) {
 		}
 
 	#ifdef HAS_TARGET
+		#ifdef PDF_MULTIPLICATIVE_NOISE
+		/* reset x_Concrete */
+		flat_to_symbolic(x_symbolic, ssDim, x_flat, ssWidths);
+		symbolic_to_concrete(x_concrete, ssDim, x_symbolic, ssLb, ssUb, ssEta);
+		#endif
 		/* compute P_0 and add it to V_int */
 		concrete_t sumP0 = 0.0;
 		for (symbolic_t t = 0; t < TARGET_SET_NUM_SYMBOLS; t++) {
@@ -192,8 +197,8 @@ __kernel void synthesize(__global xu_bag_t* XU_bags, __global concrete_t* V) {
 				pdf_error_lb[j] = x_post_concrete_lb[j]-Mu_w0[j];
 				pdf_error_ub[j] = x_post_concrete_ub[j]-Mu_w0[j];
 			#else
-				pdf_error_lb[j] = x_post_concrete_lb[j]/Mu_w0[j];
-				pdf_error_ub[j] = x_post_concrete_ub[j]/Mu_w0[j];
+				pdf_error_lb[j] = (x_post_concrete_lb[j]-Mu_w0[j])/x_concrete[i];
+				pdf_error_ub[j] = (x_post_concrete_ub[j]-Mu_w0[j])/x_concrete[i];
 			#endif
 			}
 
