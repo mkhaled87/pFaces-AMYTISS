@@ -520,6 +520,7 @@ amytissPDF_BetaDistribution::getPDFBody() {
     ssE << "else" << std::endl;
     ssE << "return ((pow((float)x[0],(float)(PDF_alpha-1.0f)))*(1-x[0])*(pow((float)x[0],(float)(PDF_beta-1.0f))))/(PDF_B(PDF_alpha, PDF_beta));";
     std::string strRet = ssE.str();
+    return strRet;
 }
 
 std::pair<std::vector<concrete_t>, std::vector<concrete_t>>
