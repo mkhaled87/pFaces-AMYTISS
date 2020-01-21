@@ -1,0 +1,86 @@
+pFaces 1.0.2
+Targeted API: OpenCL-1.2 (64-bit)/OCL-Release [OCL Device Memory Model Requested]
+Identifying available parallel devices ... done.
+This machine has the following device(s):
+	[1: CPU] Apple, Apple: Intel(R) Core(TM) i9-8950HK CPU @ 2.90GHz, 32.00/8.00 G.B.
+	[2: GPU] Apple, Apple: Intel(R) UHD Graphics 630, 1.50/0.38 G.B.
+	[3: GPU] Apple, Apple: AMD Radeon Pro Vega 20 Compute Engine, 3.98/1.00 G.B.
+We use the following devices [#] for parallel computations: [1]
+Reading pFaces configuration (../ex_roomtemp3/roomtemp3.cfg) ... done.
+Loading the kernel (kernel's constructor) ... 
+Noise type: additive
+PDF class: normal_distribution
+PDF truncation: fixed_truncation
+The org. cutting region (Lb):-1.000000,-1.000000,-1.000000
+The org. cutting region (Ub):1.000000,1.000000,1.000000
+Number of reach-states after cutting the probability: 216 - 0.000000% reduction.
+Computing the probability distribution function (PDF) symbolically .... done ! [0.007402 seconds]
+X space size: 216 (6x6x6)
+U space size: 36 (6x6)
+W space size: 1 (1) [No disturbance, singleton symbolic set]
+AMYTISS's threads will mainly work on a 2D space (X x U) with size: 7776
+Done configuring the AMYTISS kernel.
+Grouping devices into one execution context ... done.
+Configuring the kernel's parallel program ... 
+Scheduling abstraction/synthesis jobs on the targeted devices ... 
+*********************************************************************************************************************
+Task Scheduling Report:
+*********************************************************************************************************************
+abstract  : Dev.1 / Tsk.1: glb. (      216,       36) loc. (        0,        0) offs. (        0,         0) [~ 100%]
+synthesize: Dev.1 / Tsk.1: glb. (      216,       36) loc. (        0,        0) offs. (        0,         0) [~ 100%]
+collect   : Dev.1 / Tsk.1: glb. (      216,        1) loc. (        0,        0) offs. (        0,         0) [~ 100%]
+*********************************************************************************************************************
+*********************************************************************************************************************
+Memory Allocation Report: 
+*********************************************************************************************************************
+ Total Alloc.   (MB): 0.0379639
+ Num. Buffers       : 2
+ Alignment Base ( B): 128
+ Buf. Unit Size ( B): 5,864
+ Buf. Org. Size ( B): 38880,864
+ Buf. Paddings  ( B): 32,32
+ Per-Dev. Allocation: no,no
+ Buf. Tot. Size ( B): 38912,896
+*********************************************************************************************************************
+Checking the parallel program created by the kernel ... done.
+Running the parallel program [Wall-Clock Started]: 
+[Tuesday 21/01/2020 10:08:51-362] pFaces: Started building the kernel (amytiss.cpu) for the context.
+[Tuesday 21/01/2020 10:08:51-421] pFaces: The kernel is built successfully for 1 device(s) in 0.0587927 seconds.
+[Tuesday 21/01/2020 10:08:51-421] pFaces: The parallel program (amytiss.cpu) will be executed in 1 device(s) with total of 12 PEs.
+[Tuesday 21/01/2020 10:08:51-421] pFaces: Creating buffers on devices ... 
+[Tuesday 21/01/2020 10:08:51-421] pFaces: A dummy device buffer is created: Fnc [1, abstract], Arg [1/1], t.b.assigned later.
+[Tuesday 21/01/2020 10:08:51-421] pFaces: A dummy device buffer is created: Fnc [2, synthesize], Arg [2/2], t.b.assigned later.
+[Tuesday 21/01/2020 10:08:51-421] pFaces: Started running the parallel instructions.
+[Tuesday 21/01/2020 10:08:51-421] amytiss.cpu: The parallel program has started ... we start with the initialization!
+[Tuesday 21/01/2020 10:08:51-421] amytiss.cpu: Initialization completed and we continue with synthesis with on-the-fly abstraction.
+[Tuesday 21/01/2020 10:08:51-463] amytiss.cpu: 1/8 time-step(s) of the synthesis completed.
+[Tuesday 21/01/2020 10:08:51-510] amytiss.cpu: 2/8 time-step(s) of the synthesis completed.
+[Tuesday 21/01/2020 10:08:51-550] amytiss.cpu: 3/8 time-step(s) of the synthesis completed.
+[Tuesday 21/01/2020 10:08:51-591] amytiss.cpu: 4/8 time-step(s) of the synthesis completed.
+[Tuesday 21/01/2020 10:08:51-632] amytiss.cpu: 5/8 time-step(s) of the synthesis completed.
+[Tuesday 21/01/2020 10:08:51-674] amytiss.cpu: 6/8 time-step(s) of the synthesis completed.
+[Tuesday 21/01/2020 10:08:51-716] amytiss.cpu: 7/8 time-step(s) of the synthesis completed.
+[Tuesday 21/01/2020 10:08:51-764] amytiss.cpu: 8/8 time-step(s) of the synthesis completed.
+[Tuesday 21/01/2020 10:08:51-764] amytiss.cpu: Synthesis completed. We now save the controller.
+[Tuesday 21/01/2020 10:08:51-764] pFaces: Finished running the parallel instructions.
+Saving output files ... [0.0010014 sec.][0.000365886 sec.] [2 Files, Raw-size: 0.037903 M.B.]
+*********************************************************************************************************************
+Profiling report (in seconds) for the program (amytiss.cpu):
+*********************************************************************************************************************
+Kernel load/config. time: 0.0193892 seconds.
+---------------------------------------------------------------------------------------------------------------------
+Dev. [1] | abstract     : EX:  4.8508e-05, DW:  6.9886e-05, DR:  1.1561e-05, NC:     1
+Dev. [1] | synthesize   : EX:    0.341951, DW:           0, DR:           0, NC:     8
+Dev. [1] | collect      : EX: 0.000253117, DW:           0, DR:           0, NC:     8
+---------------------------------------------------------------------------------------------------------------------
+Host-side functions     : EX:           0, DW:           0, DR:           0, NC:     0
+---------------------------------------------------------------------------------------------------------------------
+Program execution time  : 0.342252 seconds.
+Pre-execute task time   : 0.000231039 seconds.	(Initializing V)
+Post-execute task time  : 0.0014596 seconds.	(Saving results)
+Total data-write time   : 6.9886e-05 seconds.
+Total data-read time    : 1.1561e-05 seconds.
+Program compile time    : 0.0587927 seconds.
+---------------------------------------------------------------------------------------------------------------------
+Wall-Clock Time         : 0.443151 seconds [Verbosity, Scheduling and Compilation Times Incl.]
+*********************************************************************************************************************

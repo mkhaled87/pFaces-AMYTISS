@@ -973,7 +973,7 @@ namespace amytiss{
 		// INSTRUCTION: a start message 
 		std::shared_ptr<pfacesInstruction> instrMsg_start = std::make_shared<pfacesInstruction>();
 		instrMsg_start->setAsMessage(
-			std::string("The prallel program has started ... we start with the initialization") +
+			std::string("The parallel program has started ... we start with the initialization") +
 			(saveP?(std::string("/abstraction")):(std::string(""))) +
 			std::string("!")
 		);
