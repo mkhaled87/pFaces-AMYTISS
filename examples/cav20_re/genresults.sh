@@ -29,8 +29,8 @@ TARGET_CONFIGS=( \
     ../ex_traffic5/traffic5.cfg \
     ../ex_vehicle3/vehicle3d.cfg \
     ../ex_vehicle3/vehicle3d.cfg \
-    ../ex_vehicle5/vehicle5d.cfg \
-    ../ex_vehicle5/vehicle5d.cfg \
+    ../ex_vehicle7/vehicle7d.cfg \
+    ../ex_vehicle7/vehicle7d.cfg \
 )
 TARGET_NAMES=( \
     "2D_STCHY_SAFETY    " \
@@ -58,10 +58,10 @@ TARGET_NAMES=( \
     "3D_TRAFK_SAFETY_OFA" \
     "5D_TRAFK_SAFETY    " \
     "5D_TRAFK_SAFETY_OFA" \
-    "3D_AUCAR_SAFETY    " \
-    "3D_AUCAR_SAFETY_OFA" \
-    "5D_AUCAR_SAFETY    " \
-    "5D_TRAFK_SAFETY_OFA" \
+    "3D_AUCAR_RAVOID    " \
+    "3D_AUCAR_RAVOID_OFA" \
+    "7D_AUCAR_RAVOID    " \
+    "7D_AUCAR_RAVOID_OFA" \
 )
 TARGET_OPTIONS=( \
     "-co \"save_transitions=true\"" \
