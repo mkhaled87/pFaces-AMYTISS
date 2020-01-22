@@ -109,13 +109,16 @@ fi
 for i in "${!TARGET_CONFIGS[@]}"
 do
     rm -f tmp.out
-    printf "Running the example (${TARGET_NAMES[i]}):"
+    printf "(${TARGET_NAMES[i]}):"
 	pfaces $PFACES_OPTIONS -cfg ${TARGET_CONFIGS[i]} ${TARGET_OPTIONS[i]} > tmp.out
+
+    CONFIG_DIR=$(eval "dirname \"${VAR}\"")
+    rm -f CONFIG_DIR/*.raw
 
     PET_LINE=$(eval "cat tmp.out | grep 'Program execution time'")
     ALC_LINE=$(eval "cat tmp.out | grep 'Total Alloc.'")
     XU_SIZE=$(eval "cat tmp.out | grep -Ei -o '(\(X x U\) with size: )[0-9]*'")
     
-    printf "  $PET_LINE\t|  $ALC_LINE\t|  $XU_SIZE\n" 
+    printf "  $PET_LINE\t|\t$ALC_LINE\t|\t$XU_SIZE\n" 
     mv tmp.out ${TARGET_NAMES[i]}
 done
