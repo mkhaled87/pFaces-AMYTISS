@@ -112,8 +112,8 @@ do
     printf "(${TARGET_NAMES[i]}):"
 	pfaces $PFACES_OPTIONS -cfg ${TARGET_CONFIGS[i]} ${TARGET_OPTIONS[i]} > tmp.out
 
-    CONFIG_DIR=$(eval "dirname \"${VAR}\"")
-    rm -f CONFIG_DIR/*.raw
+    CONFIG_DIR=$(eval "dirname \"${TARGET_CONFIGS[i]}\"")
+    rm -f $CONFIG_DIR/*.raw
 
     PET_LINE=$(eval "cat tmp.out | grep 'Program execution time'")
     ALC_LINE=$(eval "cat tmp.out | grep 'Total Alloc.'")
