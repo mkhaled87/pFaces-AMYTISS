@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PFACES_OPTIONS='-CGH -d 1 -p -k amytiss.cpu@../../kernel-pack'
+PFACES_OPTIONS='-CGH -d 3 -p -k amytiss.cpu@../../kernel-pack'
 TARGET_CONFIGS=( \
     ../ex_stochy/stochy2.cfg \
     ../ex_stochy/stochy3.cfg \
