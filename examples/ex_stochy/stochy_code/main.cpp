@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
 	int T = 6;
 
 	// Select task to perform
-	taskSpec_t cs3Spec(imdp, T, verify_safety, bound, grid, reft);
+	taskSpec_t cs3Spec(imdp, T, synthesis_safety, bound, grid, reft);
 	std::cout << "Completed creating a speciifcation object." << std::endl;
 
 	// make a model
@@ -66,6 +66,6 @@ int main(int argc, char **argv) {
 	// Problem to solve
 	inputSpec_t<arma::mat, int> cs3Input(cs3SHS, cs3Spec);
 	performTask(cs3Input);
-	std::cout << "Completed verfication task." << std::endl;
+	std::cout << "Completed synthesis task." << std::endl;
     
 }
