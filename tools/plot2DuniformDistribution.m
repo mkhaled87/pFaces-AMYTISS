@@ -1,10 +1,13 @@
+clear all
+clc
+
 % config
 mu = [0 0];
-sigma = [0.0005 0;0 0.0005];
-x1 = -3:0.2:3;
-x2 = -3:0.2:3;
-inv(sigma)
-det(sigma)
+sigma = [0.30 0;0 0.38];
+x1 = -5:0.2:5;
+x2 = -5:0.2:5;
+InvSigma = inv(sigma)
+DetSigma = det(sigma)
 
 % plot
 [X1,X2] = meshgrid(x1,x2);
