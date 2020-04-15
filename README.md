@@ -6,9 +6,9 @@ Stochastic control systems are recently used to model and analyze various safety
 
 Check the presentation video of AMYTISS for a quick introduction and a demo:
 
-[![Introduction to AMYTISS with a demo](https://img.youtube.com/vi/tEcv0mdA6Yc/1.jpg)](https://www.youtube.com/watch?v=tEcv0mdA6Yc)
-
+<p align="center"> 
 <a href="https://www.youtube.com/watch?v=tEcv0mdA6Yc" style="width:600px;"><img src="https://img.youtube.com/vi/tEcv0mdA6Yc/1.jpg" alt="drawing" style="width:600px;"/></a>
+</p>
 
 
 AMYTISS is used to:
