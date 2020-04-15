@@ -170,6 +170,23 @@ To add a custom PDF to AMYTISS, you need to first set the **pdf_class** to *"cus
 
 *: Both authors have the same contribution.
 
+## **Publications**
+
+- A. Lavei, M. Khaled, S. Soudjani, M. Zamani. AMYTISS: Parallelized Automated Controller Synthesis for Large-Scale Stochastic Systems. 32nd Conference on Computer Aided Verification (CAV), to appear, July 2020.
+- A. Lavei, M. Khaled, S. Soudjani, M. Zamani. Poster: AMYTISS: A Parallelized Tool on Automated Controller Synthesis for Large-Scale Stochastic Systems. 23rd ACM International Conference on Hybrid Systems: Computation and Control (HSCC 2020), Sydney, Australia April 2020
+
+Please cite the tool paper as follows:
+
+    @inproceedings{AMYTISS,
+        title = {Parallelized Automated Controller Synthesis for Large-Scale Stochastic Systems},
+        author = {Lavaei, Abolfazl and Khaled, Mahmoud and Soudjani, Sadegh and Zamani, Majid},
+        booktitle = {Proc. 32nd International Conference on Computer Aided Verification (CAV)},
+        publisher = {Springer},
+        series = {LNCS},
+        year = {2020}
+    }
+
+
 ## **License**
 
 See the [LICENSE](LICENSE) file for details
