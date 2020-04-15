@@ -8,7 +8,7 @@ Check the presentation video of AMYTISS for a quick introduction and a demo:
 
 <p align="center"> 
     <a href="https://www.youtube.com/watch?v=tEcv0mdA6Yc">
-        <img src="https://img.youtube.com/vi/tEcv0mdA6Yc/0.jpg" alt="AMYTISS Demo/Intro"/>
+        <img src="https://img.youtube.com/vi/tEcv0mdA6Yc/0.jpg" alt="AMYTISS Demo/Intro" target="_blank"/>
     </a>
 </p>
 
