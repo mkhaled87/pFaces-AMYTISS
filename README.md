@@ -1,13 +1,15 @@
 # **AMYTISS**: Prallel Automated Controller Synthesis for Large-scale Stochastic Systems  
 
+Stochastic control systems are recently used to model and analyze various safety-critical systems such as traffic networks and self-driving cars.
+**AMYTISS** is introduced as a software tool, implemented as a kernel on top of the acceleration ecosystem [pFaces](http://www.parallall.com/pfaces), for designing correct-by-construction controllers of stochastic discrete-time systems.
+
+
+Check the presentation video of AMYTISS for a quick introduction and a demo:
 
 [![Introduction to AMYTISS with a demo](https://img.youtube.com/vi/tEcv0mdA6Yc/1.jpg)](https://www.youtube.com/watch?v=tEcv0mdA6Yc)
 
 <a href="https://www.youtube.com/watch?v=tEcv0mdA6Yc" style="width:600px;"><img src="https://img.youtube.com/vi/tEcv0mdA6Yc/1.jpg" alt="drawing" style="width:600px;"/></a>
 
-
-Stochastic control systems are recently used to model and analyze various safety-critical systems such as traffic networks and self-driving cars.
-**AMYTISS** is introduced as a software tool, implemented as a kernel on top of the acceleration ecosystem [pFaces](http://www.parallall.com/pfaces), for designing correct-by-construction controllers of stochastic discrete-time systems.
 
 AMYTISS is used to:
 
@@ -16,11 +18,6 @@ AMYTISS is used to:
 - synthesize controllers for the constructed finite MDPs satisfying bounded-time safety specifications and reach-avoid specifications.
 
 In AMYTISS, scalable parallel algorithms are designed to construct finite MDPs and to synthesize their controllers. They are implemented on top of pFaces as a kernel that supports parallel execution within CPUs, GPUs and hardware accelerators (HWAs). 
-
-
-[![Introduction to AMYTISS with a demo](https://img.youtube.com/vi/tEcv0mdA6Yc/1.jpg)](https://www.youtube.com/watch?v=tEcv0mdA6Yc)
-
-<a href="https://www.youtube.com/watch?v=tEcv0mdA6Yc" style="width:600px;"><img src="https://img.youtube.com/vi/tEcv0mdA6Yc/1.jpg" alt="drawing" style="width:600px;"/></a>
 
 
 # **Installation**
