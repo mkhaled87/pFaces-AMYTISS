@@ -1,7 +1,9 @@
 # **AMYTISS**: Prallel Automated Controller Synthesis for Large-scale Stochastic Systems  
 
 
-[![Introduction to AMYTISS with a demo](https://img.youtube.com/vi/tEcv0mdA6Yc/1.jpg)](https://www.youtube.com/watch?v=tEcv0mdA6Yc =800x60)
+[![Introduction to AMYTISS with a demo](https://img.youtube.com/vi/tEcv0mdA6Yc/1.jpg)](https://www.youtube.com/watch?v=tEcv0mdA6Yc)
+
+<a href="https://www.youtube.com/watch?v=tEcv0mdA6Yc"><img src="https://img.youtube.com/vi/tEcv0mdA6Yc/1.jpg" alt="drawing" style="width:200px;"/></a>
 
 
 Stochastic control systems are recently used to model and analyze various safety-critical systems such as traffic networks and self-driving cars.
