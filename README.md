@@ -178,7 +178,7 @@ To add a custom PDF to AMYTISS, you need to first set the **pdf_class** to *"cus
 Please cite the tool paper as follows:
 
     @inproceedings{AMYTISS,
-        title = {Parallelized Automated Controller Synthesis for Large-Scale Stochastic Systems},
+        title = {AMYTISS: Parallelized Automated Controller Synthesis for Large-Scale Stochastic Systems},
         author = {Lavaei, Abolfazl and Khaled, Mahmoud and Soudjani, Sadegh and Zamani, Majid},
         booktitle = {Proc. 32nd International Conference on Computer Aided Verification (CAV)},
         publisher = {Springer},
