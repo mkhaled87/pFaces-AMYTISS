@@ -525,7 +525,7 @@ namespace amytiss{
 					targetSetUb[i] = target_hyperrect[2 * i + 1];
 
 					if(targetSetLb[i] >= targetSetUb[i])
-						throw std::runtime_error("amytissKernel::amytissKernel: invalid UB/LB values for the target set !");
+						throw std::runtime_error("amytissKernel::amytissKernel: invalid UB/LB values for the target set in index: " + std::to_string(i));
 
 
 					/* target data is only used in the low-level code to check if a point is target */
