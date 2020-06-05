@@ -3,7 +3,7 @@ clc
 
 % config
 mu = [0 0];
-sigma = [0.30 0;0 0.38];
+sigma = [0.01 0;0 0.01];
 x1 = -5:0.2:5;
 x2 = -5:0.2:5;
 InvSigma = inv(sigma)
