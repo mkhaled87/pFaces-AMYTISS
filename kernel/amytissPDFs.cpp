@@ -372,7 +372,7 @@ amytissPDF_UniformDistribution::amytissPDF_UniformDistribution(
     :amytissPDF(_spCfg, _ssDim, _ssEta, _ssLb, _ssUb) {
 
     // check if an active region is provided
-    std::string active_region = _spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_cutting_region);
+    std::string active_region = _spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_noise_active_region);
     if (active_region.empty() || active_region == std::string(""))
         throw std::runtime_error("For uniform distribution, you must provide an active_region in which the PDF is non-zero.");
 
