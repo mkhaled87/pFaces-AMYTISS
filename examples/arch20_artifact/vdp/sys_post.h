@@ -19,9 +19,9 @@ char is_in_B(const float* x){
     else
         return 0;
 }
-char rand_Bernoulli();
-char rand_Bernoulli(){
-    unsigned int id = get_global_id(0) + get_global_id(1)*get_global_size(0);
+char rand_Bernoulli(unsigned int actor);
+char rand_Bernoulli(unsigned int actor){
+    unsigned int id = actor*(get_global_id(0) + get_global_id(1)*get_global_size(0));
     float r = ((float)(id%100))/100.0;
     float th = 0.8;
     if(r >= th)
@@ -45,6 +45,9 @@ char is_cond_w(const float* x, const float* w, const float* x_post){
 void sys_post(float* xp, const float* x, const float* u, const float* w);
 void sys_post(float* xp, const float* x, const float* u, const float* w){
 
+    // the actor is used to enforce some randomness over the current thread
+    unsigned int actor = (unsigned int)(10*x[0]*x[1]*w[0]*w[1]);
+
     // compute post (works only on dim \in {0,1})
     f(xp, x);
 
@@ -61,25 +64,25 @@ void sys_post(float* xp, const float* x, const float* u, const float* w){
     }    
 
     // 3: normal post
-    if (is_cond_w(x,w,xp) == 1 && is_in_B(x) == 1 && rand_Bernoulli() == 0){
+    if (is_cond_w(x,w,xp) == 1 && is_in_B(x) == 1 && rand_Bernoulli(actor) == 0){
         xp[2] = 0.0; 
         return;
     }        
 
     // 4: \phi_1
-    if (is_cond_w(x,w,xp) == 0 && is_in_B(x) == 1 && rand_Bernoulli() == 0){
+    if (is_cond_w(x,w,xp) == 0 && is_in_B(x) == 1 && rand_Bernoulli(actor) == 0){
         xp[2] = 1.0; 
         return;
     }        
 
     // 5: \phi_2
-    if (is_cond_w(x,w,xp) == 1 && is_in_B(x) == 1 && rand_Bernoulli() == 1){
+    if (is_cond_w(x,w,xp) == 1 && is_in_B(x) == 1 && rand_Bernoulli(actor) == 1){
         xp[2] = -1.0; 
         return;
     }        
 
     // 6: \phi_2
-    if (is_cond_w(x,w,xp) == 0 && is_in_B(x) == 1 && rand_Bernoulli() == 1){
+    if (is_cond_w(x,w,xp) == 0 && is_in_B(x) == 1 && rand_Bernoulli(actor) == 1){
         xp[2] = -1.0; 
         return;
     }                    
