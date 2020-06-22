@@ -1,7 +1,7 @@
 clear all
 clc
 
-n = 9;
+n = 20;
 
 
 Ns = 0.1;

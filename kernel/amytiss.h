@@ -18,10 +18,10 @@ namespace amytiss{
 	/**********************************************************/
 	// some defines needed throughout the kernel source
 	/**********************************************************/
-	/* identifing name of the kernel */
+	/* identifying name of the kernel */
 	#define AMYTISS_KERNEL_NAME "amytiss"
 
-	/* the functions in the kernel and their arguemeents */
+	/* the functions in the kernel and their arguments */
 	#define AMYTISS_KERNEL_FUNC_ABSTRACT_INDEX 0
 	#define AMYTISS_KERNEL_FUNC_ABSTRACT_NAME "abstract"
 	#define AMYTISS_KERNEL_FUNC_ABSTRACT_NUM_ARGS 1
@@ -44,7 +44,7 @@ namespace amytiss{
 	#define AMYTISS_KERNEL_FUNC_COLLECT_ARG_V_INDEX 1
 	#define AMYTISS_KERNEL_FUNC_COLLECT_ARG_V_NAME "V"
 
-	/* The kernel variable patameters to be updated before compilation */
+	/* The kernel variable parameters to be updated before compilation */
 	#define AMYTISS_KERNEL_PARAM_EXTRA_INC_FILES "@@EXTRA_INC_FILES@@"
 	#define AMYTISS_KERNEL_PARAM_CONCRETE_DATA_TYPE "@@CONCRETE_DATA_TYPE@@"
 	#define AMYTISS_KERNEL_PARAM_SYMBOLIC_DATA_TYPE "@@SYMBOLIC_DATA_TYPE@@"
@@ -89,7 +89,7 @@ namespace amytiss{
 	#define AMYTISS_KERNEL_PARAM_AVOID_DATA "@@AVOID_DATA@@"
 
 
-	/* the keys of the configuration parameters in the configuation file */
+	/* the keys of the configuration parameters in the config file */
 	#define AMYTISS_CONFIG_PARAM_project_name	"project_name"	
 	#define AMYTISS_CONFIG_PARAM_include_files	"include_files"
 	#define AMYTISS_CONFIG_PARAM_data	"data"
@@ -116,10 +116,12 @@ namespace amytiss{
 	#define AMYTISS_CONFIG_PARAM_specs_time_steps "specs.time_steps"
 	#define AMYTISS_CONFIG_PARAM_specs_type_value_safe	"safe"
 	#define AMYTISS_CONFIG_PARAM_specs_type_value_reach	"reach"
+	#define AMYTISS_CONFIG_PARAM_specs_type_value_infoft "infoft"
 	#define AMYTISS_CONFIG_PARAM_specs_avoid_hyperrect "specs.avoid_hyperrect"
+	#define AMYTISS_CONFIG_PARAM_specs_infoft_hyperrect "specs.infoft_hyperrect"
 
 
-	// the key names of the metadata in the output fiiles
+	// the key names of the metadata in the output files
 	#define OUT_FILE_PARAM_SS_DIMENSION "ss-dimension"
 	#define OUT_FILE_PARAM_IS_DIMENSION "is-dimension"
 	#define OUT_FILE_PARAM_WS_DIMENSION "ws-dimension"

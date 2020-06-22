@@ -144,7 +144,7 @@ The following are all the keys that can be used in AMYTISS config files:
         - "safe" for safety specifications, that is finding a controller to keep the system in its state space.
         - "reach" for reachability (or reach-avoid) specifications, that is finding a controller to reach some target set of states. There is a also a possibility of providing some set of avoid states.
     - **hyperrect** (required): a comma-separated list of lower/upper values for each component of the states.dim components describing the safe region or the target region, for safety or reachability specifications, respectively.
-    - **avoid_hyperrect**: in case type="reach", this comma-separated list of lower/upper values for each component of the states.dim components describes the avoid set.
+    - **avoid_hyperrect**: in case type="reach", this comma-separated list of lower/upper values for each component of the states.dim components describes an avoid set.
     - **time_steps**: (required): the time bound $T_d$ to satisfy the specifications.
 
 ## **Adding a custom PDF**

@@ -1,6 +1,6 @@
 % configurations for the simulation
 addpath('../interface/');
-filename = 'int2_V.raw';
+filename = 'int8_V.raw';
 toy2dDataFile = DataFile(filename, true, true);
 
 % making an a object of V values
