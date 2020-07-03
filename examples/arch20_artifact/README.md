@@ -55,11 +55,11 @@ Here, we assume you will be using a Linux machine. Commands will be slightly dif
 ```    
 3. Build the Docker image:
 ```
-    $ docker build -t arch20/amytiss .
+    $ docker build -t amytiss/latest .
 ```    
 4. Run/entrer the image
 ```
-    $ docker run -it arch20/amytiss
+    $ docker run -it amytiss/latest
 ```    
 5. The last command will take you to the interactive shell. Navigate to the case-studies directory:
 ```
