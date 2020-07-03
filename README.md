@@ -44,7 +44,9 @@ $ docker run -it amytiss/latest
 Now you can use AMYTISS. It is located in the director **pFaces-AMYTISS** and you can navigate to it as follows:
 ``` bash
 $ cd pFaces-AMYTISS
-```    
+```
+
+**Important note: In the Docker image, we installed Oclgrind to simulate an OpenCL platform/device that utilizes all the CPU cores usign threads. Unless you will be passing-through your device (e.g., a GPU), you MUST preceed any pFaces command with oclgrind**.
 
 ## **Installation using Source Code**
 
