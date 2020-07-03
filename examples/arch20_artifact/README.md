@@ -50,9 +50,9 @@ Here, we assume you will be using a Linux machine. Commands will be slightly dif
 4. Run/entrer the image
     $ docker run -it arch20/amytiss
 5. The last command will take you to the interactive shell. Navigate to the case-studies directory:
-    # cd cd pFaces-AMYTISS/examples/arch20_artifact/
+    $ cd cd pFaces-AMYTISS/examples/arch20_artifact/
 6. Each case-study has its separate directory. Navigate to any case-study (e.g., BAS):
-    # cd BAS
+    $ cd BAS
 7. Run the case study using the provided run script (different for each case study but has the form run_amytiss_XXX.sh, where XXX is the name of the case-study). Note that we are using oclgrind here to emulate a platform/device inside the Docker image. If you passed-through your device (e.g., a GPU), you need to remove the oclgrind part of the command:
-    # oclgrind sh run_amytiss_bas.sh
+    $ oclgrind sh run_amytiss_bas.sh
 8. Repeat the steps from 6 for other case studies.
