@@ -46,7 +46,10 @@ Now you can use AMYTISS. It is located in the director **pFaces-AMYTISS** and yo
 $ cd pFaces-AMYTISS
 ```
 
-**Important note: In the Docker image, we installed Oclgrind to simulate an OpenCL platform/device that utilizes all the CPU cores usign threads. Unless you will be passing-through your device (e.g., a GPU), you MUST preceed any pFaces command with oclgrind**.
+In the Docker image, we installed Oclgrind to simulate an OpenCL platform/device that utilizes all the CPU cores usign threads. Unless you will be passing-through your device (e.g., a GPU), you MUST preced any pFaces command with oclgrind. For example, to check available devices in the prespective of Oclgrind, run:
+``` bash
+$ oclgrind pfaces -CGH -l
+```
 
 ## **Installation using Source Code**
 
