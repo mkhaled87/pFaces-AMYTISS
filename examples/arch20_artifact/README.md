@@ -30,7 +30,9 @@ platforms:
 3. Install AMYTISS as described here: https://github.com/mkhaled87/pFaces-AMYTISS
 4. Navigate to AMYTISS's installation directory.
 5. Navigate to the ARCH20 artifact direcotry:
+```
     $ cd examples/arch20_artifact/
+```
 6. Each case-study has its separate directory. Navigate to any case-study (e.g., BAS):
     $ cd BAS
 7. Run the case study using the provided run script (different for each case study but has the form run_amytiss_XXX.sh, where XXX is the name of the case-study):
