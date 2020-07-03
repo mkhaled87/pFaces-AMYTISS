@@ -5,7 +5,7 @@ We provide the configuration files and unstructions to reproduce the results rep
 platforms:
 
 1. AWS server (3 different instances), and 
-2. Docker @ Windows 10. 
+2. Docker. 
 
 ## Quick start
 
