@@ -20,7 +20,31 @@ AMYTISS is used to:
 In AMYTISS, scalable parallel algorithms are designed to construct finite MDPs and to synthesize their controllers. They are implemented on top of pFaces as a kernel that supports parallel execution within CPUs, GPUs and hardware accelerators (HWAs). 
 
 ## **Installation using Docker**
-koko wawa
+Here, we assume you will be using Linux or MacOS machine. Commands will be slightly different on Windows if you use Windows PowerShell.
+
+First, make sure to configure Docker to use all of the resources available (e.g., all CPU cores). Otherwise, AMYTISS will run slower than expected. Also, in case you are using a GPU, make sure to pass-through the GPU in Docker. See this [guide](https://docs.docker.com/config/containers/resource_constraints/).
+
+Download the Dockerfile:
+``` bash
+$ mkdir amytiss
+$ cd amytiss
+$ wget https://raw.githubusercontent.com/mkhaled87/pFaces-AMYTISS/master/Dockerfile
+```    
+
+Build the Docker image:
+``` bash
+$ docker build -t amytiss/latest.
+```    
+
+Run/enter the image's interactive shell
+``` bash
+    $ docker run -it amytiss/latest
+```    
+
+Now you can use AMYTISS. It is located in the director **pFaces-AMYTISS** and you can navigate to it as follows:
+```
+    $ cd pFaces-AMYTISS
+```    
 
 ## **Installation using Source Code**
 
