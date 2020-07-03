@@ -38,12 +38,12 @@ $ docker build -t amytiss/latest.
 
 Run/enter the image's interactive shell
 ``` bash
-    $ docker run -it amytiss/latest
+$ docker run -it amytiss/latest
 ```    
 
 Now you can use AMYTISS. It is located in the director **pFaces-AMYTISS** and you can navigate to it as follows:
-```
-    $ cd pFaces-AMYTISS
+``` bash
+$ cd pFaces-AMYTISS
 ```    
 
 ## **Installation using Source Code**
