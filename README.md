@@ -19,11 +19,14 @@ AMYTISS is used to:
 
 In AMYTISS, scalable parallel algorithms are designed to construct finite MDPs and to synthesize their controllers. They are implemented on top of pFaces as a kernel that supports parallel execution within CPUs, GPUs and hardware accelerators (HWAs). 
 
-# **Installation**
+## **Installation using Docker**
+koko wawa
 
-## **Prerequisites**
+## **Installation using Source Code**
 
-### pFaces
+### **Prerequisites**
+
+#### pFaces
 
 You first need to have have [pFaces](http://www.parallall.com/pfaces) installed and working. Test the installation of pFaces and make sure it recognizes the parallel hardware in your machine by running the following command:
 
@@ -33,20 +36,20 @@ $ pfaces -CGH -l
 
 where **pfaces** calls pFaces launcher as installed in your machine. This should list all available HW configurations attached to your machine and means you are ready to work with AMYTISS.
 
-### Build tools
+#### Build tools
 
 AMYTISS is given as source code that need to be built before running it. This requires a modern C/C++ compiler such as:
 
 - For windows: Microsoft Visual C++ (AMYTISS is tested with Visual Studio 2019 community edition);
 - For Linux/MacOS: GCC/G++.
 
-## **Building AMYTISS**
+### **Building AMYTISS**
 
-### Windows
+#### Windows
 
 If you will be using Visual Studio on Windows, download the repository and open the provided VisualStudio-solution file [pFaces-AMYTISS.sln](pFaces-AMYTISS.sln) and build it using the **Release (x64)** configuration. Building with **Debug** configuration will result in a slower operation and requires having the debug binaries of pFaces.
 
-### Linux or MacOS
+#### Linux or MacOS
 
 If you will be using Linux or MacOS, assuming you have a GIT client, simply run the following command to clone this repo:
 
@@ -90,11 +93,11 @@ $ pfaces -CGH -d 1 -k amytiss@../../kernel-pack -cfg toy2d.cfg -p
 
 where **pfaces** calls pFaces launcher, "-CGH -d 1" asks pFaces to run AMYTISS in the first device of all available devices, "-k amytiss@../../kernel-pack" tells pFaces about AMYTISS and where it is located, "-cfg toy2d.cfg" asks pFaces to hand the configuration file to AMYTISS, and "-p" asks pFaces to collect profiling information. Make sure to replace each / with \ in case you are using Windows command line.
 
-### **Designing your own example**
+## **Designing your own example**
 
 We recommend copying and modifying one of the provided examples to avoid syntactical mistakes. Examples are simply configuration files that asks AMYTISS to achieve specific tasks. The next subsection will guide you understand the fields in AMYTISS config files.
 
-## **The configuration files**
+### **The configuration files**
 
 Each configuration file corresponds to a case describing a stochastic system and the requirements to be used to synthesize a controller for it. Config files are plain-text files with scopes and contents (e.g., "scope_name { contents }"), where the contents is a list of ;-separated key="value" pairs. Note that values need to be enclosed with double quotes. For a better understanding of such syntax, take a quick look to this [example config file](/examples/ex_toy_safety/toy2d.cfg). 
 
@@ -147,7 +150,7 @@ The following are all the keys that can be used in AMYTISS config files:
     - **avoid_hyperrect**: in case type="reach", this comma-separated list of lower/upper values for each component of the states.dim components describes an avoid set.
     - **time_steps**: (required): the time bound $T_d$ to satisfy the specifications.
 
-## **Adding a custom PDF**
+### **Adding a custom PDF**
 To add a custom PDF to AMYTISS, you need to first set the **pdf_class** to *"custom"*. AMYTISS will then expect a file *custom_pdf.cl* next to the configuration file. The file should contain the code:
 
 ``` c
