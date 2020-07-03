@@ -63,7 +63,7 @@ $ export PFACES_SDK_ROOT=/full/path/to/pfaces-sdk
 Now, navigate to the created repo folder and build AMYTISS:
 
 ``` bash
-$ cd amytiss
+$ cd pFaces-AMYTISS
 $ make
 ```
 
