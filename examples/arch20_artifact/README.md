@@ -31,15 +31,15 @@ platforms:
 4. Navigate to AMYTISS's installation directory.
 5. Navigate to the ARCH20 artifact direcotry:
 ```
-    $ cd examples/arch20_artifact/
+$ cd examples/arch20_artifact/
 ```
 6. Each case-study has its separate directory. Navigate to any case-study (e.g., BAS):
 ```
-    $ cd BAS
+$ cd BAS
 ```    
 7. Run the case study using the provided run script (different for each case study but has the form run_amytiss_XXX.sh, where XXX is the name of the case-study):
 ```
-    $ sh run_amytiss_bas.sh
+$ sh run_amytiss_bas.sh
 ```    
 8. Repeat the steps from 5 for other case studies.
 
@@ -49,28 +49,28 @@ Here, we assume you will be using a Linux machine. Commands will be slightly dif
 1. Make sure to configure Docker to use all of the resources available (e.g., all CPU cores). Otherwise, AMYTISS will run slower than expected. Also, in case you are using a GPU, make sure to pass-through the GPU in Docker. See this guide: https://docs.docker.com/config/containers/resource_constraints/.
 2. Download the Dockerfile:
 ```
-    $ mkdir amytiss
-    $ cd amytiss
-    $ wget https://raw.githubusercontent.com/mkhaled87/pFaces-AMYTISS/master/Dockerfile
+$ mkdir amytiss
+$ cd amytiss
+$ wget https://raw.githubusercontent.com/mkhaled87/pFaces-AMYTISS/master/Dockerfile
 ```    
 3. Build the Docker image:
 ```
-    $ docker build -t amytiss/latest .
+$ docker build -t amytiss/latest .
 ```    
-4. Run/entrer the image
+4. Run/enter the image
 ```
-    $ docker run -it amytiss/latest
+$ docker run -it amytiss/latest
 ```    
 5. The last command will take you to the interactive shell. Navigate to the case-studies directory:
 ```
-    $ cd cd pFaces-AMYTISS/examples/arch20_artifact/
+$ cd cd pFaces-AMYTISS/examples/arch20_artifact/
 ```    
 6. Each case-study has its separate directory. Navigate to any case-study (e.g., BAS):
 ```
-    $ cd BAS
+$ cd BAS
 ```
 7. Run the case study using the provided run script (different for each case study but has the form run_amytiss_XXX.sh, where XXX is the name of the case-study). Note that we are using oclgrind here to emulate a platform/device inside the Docker image. If you passed-through your device (e.g., a GPU), you need to remove the oclgrind part of the command:
 ```
-    $ oclgrind sh run_amytiss_bas.sh
+$ oclgrind sh run_amytiss_bas.sh
 ```    
 8. Repeat the steps from 6 for other case studies.
