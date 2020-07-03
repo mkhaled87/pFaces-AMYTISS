@@ -51,7 +51,7 @@ Here, we assume you will be using a Linux machine. Commands will be slightly dif
 ```
     $ mkdir amytiss
     $ cd amytiss
-    $ wget https://raw.githubusercontent.com/mkhaled87/pFaces-AMYTISS/master/examples/arch20_artifact/Dockerfile
+    $ wget https://raw.githubusercontent.com/mkhaled87/pFaces-AMYTISS/master/Dockerfile
 ```    
 3. Build the Docker image:
 ```
