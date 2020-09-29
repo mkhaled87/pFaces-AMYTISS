@@ -33,7 +33,7 @@ $ wget https://raw.githubusercontent.com/mkhaled87/pFaces-AMYTISS/master/Dockerf
 
 Build the Docker image:
 ``` bash
-$ docker build -t amytiss/latest.
+$ docker build -t amytiss/latest .
 ```    
 
 Run/enter the image's interactive shell
