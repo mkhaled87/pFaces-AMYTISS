@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # CMake cofiguration
-BUILDTYPE=Debug
+BUILDTYPE=Release
 KERNEL_NAME=amytiss
 
 # remove old build files and binaries
