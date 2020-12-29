@@ -8,7 +8,7 @@ KERNEL_NAME=amytiss
 rm -rf kernel-pack/$KERNEL_NAME
 
 # building ...
-mkdir build
+mkdir -p build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=$BUILDTYPE
 cmake --build . --config $BUILDTYPE
