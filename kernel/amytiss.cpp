@@ -23,7 +23,6 @@ namespace amytiss{
 		// this kernel
 		amytissKernel* pAmytissKernel = ((amytissKernel*)(&thisKernel));
 
-
 		// setting the inital value of V
 		concrete_t* pV = (concrete_t*)thisParallelProgram.m_dataPool[1].first;
 		if (thisParallelProgram.m_dataPool[1].second < sizeof(concrete_t) * thisParallelProgram.m_Process_globalNDRange[0])
@@ -912,6 +911,7 @@ namespace amytiss{
 		std::vector<std::pair<char*, size_t>> dataPool;
 		pFacesMemoryAllocationReport memReport;
 
+
 		memReport = allocateMemory(dataPool, parallelProgram.getMachine(), parallelProgram.getTargetDevicesIndicies(),
 									pfacesUtils::oclGetRangeVolume(ndProcessRangeXU), false);
 
@@ -919,7 +919,6 @@ namespace amytiss{
 		if (parallelProgram.m_beVerboseLevel >= 2) {
 			memReport.PrintReport();
 		}	
-
 
 		// preparing sub-buffer info for the all functions - at arg index 0 ! 
 		if (parallelProgram.countTargetDevices() > 1) {
