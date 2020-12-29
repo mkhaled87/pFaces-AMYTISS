@@ -4,8 +4,7 @@
 BUILDTYPE=Release
 KERNEL_NAME=amytiss
 
-# remove old build files and binaries
-rm -rf build
+# remove old build binaries
 rm -rf kernel-pack/$KERNEL_NAME
 
 # building ...
@@ -14,3 +13,4 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=$BUILDTYPE
 cmake --build . --config $BUILDTYPE
 cd ..
+rm -rf build
