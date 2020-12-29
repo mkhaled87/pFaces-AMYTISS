@@ -1,8 +1,8 @@
 # binaries, temp files and temp build dir
 build/
 kernel-pack/*.driver
-kernel-pack/*.render*
-kernel-pack/*.log
+**/*.render*
+**/*.log
 
 # VS and VSCode
 .vs/
