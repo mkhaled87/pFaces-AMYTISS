@@ -74,30 +74,32 @@ AMYTISS is given as source code that need to be built before running it. This re
 
 ### **Building AMYTISS**
 
-#### Windows
-
-If you will be using Visual Studio on Windows, download the repository and open the provided VisualStudio-solution file [pFaces-AMYTISS.sln](pFaces-AMYTISS.sln) and build it using the **Release (x64)** configuration. Building with **Debug** configuration will result in a slower operation and requires having the debug binaries of pFaces.
-
-#### Linux or MacOS
-
-If you will be using Linux or MacOS, assuming you have a GIT client, simply run the following command to clone this repo:
+AMYTISS uses CMake for cross-platform building.
+We support Windows, Linux and MacOS.
+AMYTISS was tested on Windows 10x64, Linux Ubuntu 18.04 and MacOS 10.
+In Windows, you must use the developer command prompt of Visual Studio so that CMake is integrated.
+Start by cloning this repo to some place in your machine (commands prompt is a little different in Windows):
 
 ``` bash
 $ git clone --depth=1 https://github.com/mkhaled87/pFaces-AMYTISS
 ```
 
-AMYTISS requires to link with pFaces SDK. The environment variable **PFACES_SDK_ROOT** should point to pFaces SDK root directory. Make sure you have the environment variable **PFACES_SDK_ROOT** pointing to the full absolute pFaces SDK folder. If not, do it as follows:
-
-``` bash
-$ export PFACES_SDK_ROOT=/full/path/to/pfaces-sdk
-```
-
-Now, navigate to the created repo folder and build AMYTISS:
+Now, run the build script that automates the CMake-based build.
+For MacOS/Linux:
 
 ``` bash
 $ cd pFaces-AMYTISS
-$ make
+$ ./build.sh
 ```
+
+For MacOS/Linux:
+
+``` bash
+> cd pFaces-AMYTISS
+> .\build.bat
+```
+
+A successful build will generate the kernel driver `amytiss.driver` in the `kernel-pack` folder.
 
 ## **Getting Started**
 
