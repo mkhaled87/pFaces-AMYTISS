@@ -122,7 +122,7 @@ Say you navigated to the example in [/examples/ex_toy_safety](/examples/ex_toy_s
 $ pfaces -CG -d 1 -k amytiss@../../kernel-pack -cfg toy2d.cfg -p
 ```
 
-where **pfaces** calls pFaces launcher, "-CGH -d 1" asks pFaces to run AMYTISS in the first device of all available devices, "-k amytiss@../../kernel-pack" tells pFaces about AMYTISS and where it is located, "-cfg toy2d.cfg" asks pFaces to hand the configuration file to AMYTISS, and "-p" asks pFaces to collect profiling information. Make sure to replace each / with \ in case you are using Windows command line.
+where **pfaces** calls pFaces launcher, "-CG -d 1" asks pFaces to run AMYTISS in the first device of all available devices, "-k amytiss@../../kernel-pack" tells pFaces about AMYTISS and where it is located, "-cfg toy2d.cfg" asks pFaces to hand the configuration file to AMYTISS, and "-p" asks pFaces to collect profiling information. Make sure to replace each / with \ in case you are using Windows command line.
 
 ## **Designing your own example**
 
