@@ -60,7 +60,7 @@ $ oclgrind pfaces -CG -l
 You first need to have have [pFaces](http://www.parallall.com/pfaces) installed and working. Test the installation of pFaces and make sure it recognizes the parallel hardware in your machine by running the following command:
 
 ``` bash
-$ pfaces -CGH -l
+$ pfaces -CG -l
 ```
 
 where **pfaces** calls pFaces launcher as installed in your machine. This should list all available HW configurations attached to your machine and means you are ready to work with AMYTISS.
@@ -119,7 +119,7 @@ Navigate to any of the examples in the directory [/examples](/examples). Within 
 Say you navigated to the example in [/examples/ex_toy_safety](/examples/ex_toy_safety) and you want to launch AMYTISS with the config file [toy2d.cfg](/examples/ex_toy_safety/toy2d.cfg), then run the following command from any terminal located in the example folder:
 
 ``` bash
-$ pfaces -CGH -d 1 -k amytiss@../../kernel-pack -cfg toy2d.cfg -p
+$ pfaces -CG -d 1 -k amytiss@../../kernel-pack -cfg toy2d.cfg -p
 ```
 
 where **pfaces** calls pFaces launcher, "-CGH -d 1" asks pFaces to run AMYTISS in the first device of all available devices, "-k amytiss@../../kernel-pack" tells pFaces about AMYTISS and where it is located, "-cfg toy2d.cfg" asks pFaces to hand the configuration file to AMYTISS, and "-p" asks pFaces to collect profiling information. Make sure to replace each / with \ in case you are using Windows command line.
