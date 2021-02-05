@@ -115,22 +115,10 @@ classdef amytissXUBag
         end           
         
         function p = getPmin(obj, reach_state_idx)
-            p = obj.getPr(0, reach_state_idx);
-            for w = 1:obj.w_width -1
-                p_new = amytissXUBag.getPr(obj, w, reach_state_idx);
-                if p_new < p
-                    p = p_new;
-                end
-            end
-        end
-        
-        function p = getPmax(obj, reach_state_idx)
-            p = obj.getPr(0, reach_state_idx);
-            for w = 1:obj.w_width -1
-                p_new = amytissXUBag.getPr(obj, w, reach_state_idx);
-                if p_new > p
-                    p = p_new;
-                end
+            p = 1.0
+            for w = 0:w_width -1
+                p_new = amytissXUBag.getPr(obj, w, reach_state_idx)
+                if p_new 
             end
         end
         

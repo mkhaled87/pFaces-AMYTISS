@@ -56,37 +56,25 @@ function mdp_plot_transition(filename, x_conc, u_conc, min_or_max)
     sum_p_max = 0;
     for k=1:num_reach_states
         
-        if xubag.is_safe_or_reach
-            p_min = xubag.getPmin(k-1);
-            p_max = xubag.getPmax(k-1);
+        p_min = xubag.getPmin(k-1);
+        p_max = xubag.getPmax(k-1);
 
-            if strcmp(min_or_max, 'min')
-                p = p_min;
-            else
-                p = p_max;
-            end
+        if strcmp(min_or_max, 'min')
+            p = p_min;
         else
-            p = xubag.getP1min(k-1);
+            p = p_max;
         end
 
         xsym = cut_region_quantizer.unflatten(k-1);
         xconc = cut_region_quantizer.desymbolize(xsym);
         drawbar(xconc(1),xconc(2),p,ss_eta(1)/2);
         
-        if xubag.is_safe_or_reach
-            sum_p_min = sum_p_min + p_min;
-            sum_p_max = sum_p_max + p_max;
-        else
-            sum_p_min = sum_p_min + p;
-        end
+        sum_p_min = sum_p_min + p_min;
+        sum_p_max = sum_p_max + p_max;
     end
 
-    if xubag.is_safe_or_reach
-        disp(['Sum P-min = ' num2str(sum_p_min)]);
-        disp(['Sum P-max = ' num2str(sum_p_max)]);
-    else
-        disp(['Sum P1 = ' num2str(sum_p_min)]);
-    end
+    disp(['Sum P-min = ' num2str(sum_p_min)]);
+    disp(['Sum P-max = ' num2str(sum_p_max)]);
 
     % finalize
     axis([ss_lb(1) ss_ub(1) ss_lb(2) ss_ub(2)]);
