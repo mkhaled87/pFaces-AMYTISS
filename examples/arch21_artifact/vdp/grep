@@ -1,0 +1,742 @@
+/*
+* amytiss.cpu.cl
+*
+*  date    : 28.04.2019
+*  author  : M. Khaled | Hybrid control systems @ Technical University of Munich, Germany
+*  about   : an OpenCL kernel (optimized for CPUs) used to of the tool AMYTISS.
+*            AMYTISS is a tool for an abstractuin based synthesis of stochastic systems.
+* ***********************************************************************
+*  The kernel manager will replace parameters enclosed by "@@" before compiling !
+*/
+
+#define CPU_VERSION
+#include "pfaces.cl"
+
+#include "sys_post.h"
+
+
+// pfaces-Including some functions for quantization
+/* those are the used data types to represent flat (flattned deimentional), symbolic (multi dimentional integers) and concrete (real) values */
+#define concrete_t float
+#define symbolic_t ulong
+
+
+/* some handy functions */
+void flat_to_symbolic(symbolic_t* symbolic_value, symbolic_t dim, const symbolic_t flat_value, const symbolic_t* dim_width);
+void flat_to_symbolic(symbolic_t* symbolic_value, symbolic_t dim, const symbolic_t flat_value, const symbolic_t* dim_width) {
+
+	symbolic_t fltCurrent;
+	symbolic_t fltIntial;
+	symbolic_t fltVolume;
+	symbolic_t fltTmp;
+
+	fltIntial = flat_value;
+	for (int i = dim - 1; i >= 0; i--) {
+		fltCurrent = fltIntial;
+
+		fltVolume = 1;
+		for (int k = 0; k < i; k++) {
+			fltTmp = dim_width[k];
+			fltVolume = fltVolume*fltTmp;
+		}
+
+		fltCurrent = fltCurrent/fltVolume;
+		fltTmp = dim_width[i];
+		fltCurrent = fltCurrent % fltTmp;
+
+		symbolic_value[i] = fltCurrent;
+
+		fltCurrent = fltCurrent*fltVolume;
+		fltIntial = fltIntial - fltCurrent;
+	}
+}
+
+void  symbolic_to_concrete(concrete_t* out_conc_value, symbolic_t dim, const symbolic_t* symbolic_value, const concrete_t* lb, const concrete_t* ub, const concrete_t* eta);
+void  symbolic_to_concrete(concrete_t* out_conc_value, symbolic_t dim, const symbolic_t* symbolic_value, const concrete_t* lb, const concrete_t* ub, const concrete_t* eta) {
+
+	// set grid centers as concrete values
+	for (unsigned int i = 0; i < dim; i++)
+		out_conc_value[i] = lb[i] + (((concrete_t)symbolic_value[i]) * eta[i]);
+}
+
+void concrete_to_symbolic( symbolic_t* out_symbolic_value, symbolic_t dim, const concrete_t* concrete_value, const concrete_t* lb, const concrete_t* eta);
+void concrete_to_symbolic( symbolic_t* out_symbolic_value, symbolic_t dim, const concrete_t* concrete_value, const concrete_t* lb, const concrete_t* eta) {
+	
+	for (unsigned int i = 0; i < dim; i++)
+		out_symbolic_value[i] = (symbolic_t)floor((concrete_value[i] - lb[i])/eta[i]);
+}
+
+void symbolic_to_flat(symbolic_t* out_flat_value, symbolic_t dim, const symbolic_t* symbolic_value, const symbolic_t* dim_width);
+void symbolic_to_flat(symbolic_t* out_flat_value, symbolic_t dim, const symbolic_t* symbolic_value, const symbolic_t* dim_width) {
+
+	symbolic_t fltTmpVolume;
+	symbolic_t fltTmp;
+
+	*out_flat_value = 0;
+	for (unsigned int i = 0; i < dim; i++) {
+		fltTmpVolume = 1;
+		for (unsigned int j = 0; j < i; j++) {
+			fltTmp = dim_width[j];
+			fltTmpVolume = fltTmpVolume*fltTmp;
+		}
+		fltTmp = symbolic_value[i];
+		fltTmp = fltTmp*fltTmpVolume;
+		*out_flat_value = *out_flat_value + fltTmp;
+	}
+}
+
+// pfaces-Including a parameters and some funcs
+/* the diemnsions of the state space, input spcae, and disturvance state */
+#define ssDim 3
+#define isDim 1
+#define wsDim 1
+
+/* quantizations and bounds for the ss, is and ws*/
+#define SS_ETA_LIST {0.050000,0.050000,1.000000}
+#define IS_ETA_LIST {1.000000}
+#define WS_ETA_LIST {1.000000}
+#define SS_LB_LIST {-5.000000,-5.000000,-1.000000}
+#define IS_LB_LIST {0.000000}
+#define WS_LB_LIST {0.000000}
+#define SS_UB_LIST {5.000000,5.000000,1.000000}
+#define IS_UB_LIST {0.000000}
+#define WS_UB_LIST {0.000000}
+#define SS_WIDTHS_LIST {201,201,3}
+#define IS_WIDTHS_LIST {1}
+#define WS_WIDTHS_LIST {1}
+#define SS_NUM_SYBOLS 121203
+#define IS_NUM_SYBOLS 1
+#define WS_NUM_SYBOLS 1
+
+/* here will come a define to control wheather we will save the P matricies or compute them on the fly */
+#define SAVE_P_MATRIX
+
+/* indicatiors for whether this is a reacchability problem of a safety problem */
+#define HAS_TARGET
+
+
+
+
+#ifdef HAS_TARGET
+	#ifdef HAS_SAFE
+		#error "This kernel works either for safety specification or reachibility specification not both at the same time"
+	#endif
+#endif
+
+#ifdef HAS_SAFE
+	#ifdef HAS_AVOID
+		#error "Avoid set is only valid with reachability specifications (i.e., reach-avoid)!"
+	#endif
+#endif
+
+
+/* in case this is a reachability problem */
+#ifdef HAS_TARGET
+#define TARGET_SET_LB {-5.000000,-5.000000,0.000000}
+#define TARGET_SET_UB {5.000000,5.000000,1.000000}
+#define TARGET_SET_WIDTHS {201,201,2}
+#define TARGET_SET_NUM_SYMBOLS 80802
+char is_target(const concrete_t* x);
+char is_target(const concrete_t* x) {
+	concrete_t  target[ssDim][2] = { {-5.012500, 5.012500}, {-5.012500, 5.012500}, {-0.250000, 1.250000}};
+	for (unsigned int i = 0; i < ssDim; i++) {
+		if (x[i]<target[i][0] || x[i]>target[i][1]) {
+			return 0;
+		}
+	}
+	return 1;
+}
+#endif
+
+/* in case there is a set to be avoided */
+#ifdef HAS_AVOID
+char is_avoid(const concrete_t * x);
+char is_avoid(const concrete_t * x) {
+	concrete_t  avoid[ssDim][2] = {};
+	for (unsigned int i = 0; i < ssDim; i++) {
+		if (x[i]<avoid[i][0] || x[i]>avoid[i][1]) {
+			return 0;
+		}
+	}
+	return 1;
+}
+#endif
+
+
+/* deffines for states, inputs and disturbances to make life easier (add more if needed) */
+#define x0 x[0]
+#define x1 x[1]
+#define x2 x[2]
+#define x3 x[3]
+#define x4 x[4]
+#define x5 x[5]
+#define x6 x[6]
+#define x7 x[7]
+#define x8 x[8]
+#define x9 x[9]
+#define x10 x[10]
+#define x11 x[11]
+#define x12 x[12]
+#define x13 x[13]
+#define x14 x[14]
+#define x15 x[15]
+#define x16 x[16]
+#define x17 x[17]
+#define x18 x[18]
+#define x19 x[19]
+#define x20 x[20]
+#define x21 x[21]
+
+
+#define u0 u[0]
+#define u1 u[1]
+#define u2 u[2]
+#define u3 u[3]
+#define u4 u[4]
+#define u5 u[5]
+
+#if isDim > 6
+	#error "Please change the defines for the inputs above to accommodate for more input variables."
+#endif // isDim > 6
+
+#define w0 w[0]
+#define w1 w[1]
+#define w2 w[2]
+#define w3 w[3]
+#define w4 w[4]
+#define w5 w[5]
+
+#if wsDim > 6
+	#error "Please change the defines for the disturbances above to accommodate for more disturbance variables."
+#endif // wsDim > 6
+
+
+/* the dynamics post function without any noise : noise is assumed to be additive */
+void post_dynamics(concrete_t* xx, const concrete_t* x, const concrete_t* u, const concrete_t* w);
+void post_dynamics(concrete_t* xx, const concrete_t* x, const concrete_t* u, const concrete_t* w) {
+	
+	
+	xx[0] = 0;
+xx[1] = 0;
+xx[2] = 0;
+
+	sys_post(xx, x, u, w);
+}
+
+/* Defines for the PDF: the bounds of cutting region +  */
+/* the cutting bounds of the PDF */
+#define CUTTING_REGION_LB {-0.020000,-0.020000,0.000000}
+#define CUTTING_REGION_UB {0.020000,0.020000,0.000000}
+/* number of symbols in the cutting region */
+#define NUM_REACH_STATES 4
+#define CUTTING_REGION_WIDTHS {2,2,1}
+/* extra defines requested by the PDF */
+
+
+/* numer of time steps to solve the synthesis */
+#define TIME_STEPS 8
+
+/* number of control bytes */
+#define HAS_CONTROL_BYTES
+#define NUM_CONTROL_BYTES 1
+
+/* a memory bag used for global memory (RW: Read/Write) : will be duplicated along XU 2D domain */
+typedef struct __attribute__((packed)) xu_bag {
+#ifdef SAVE_P_MATRIX
+	concrete_t Pr[WS_NUM_SYBOLS][NUM_REACH_STATES];		/* the Probability (for-each w in W) (for-each post_state in the cutting-region) */
+#endif
+	concrete_t V_INT_MIN;								/* the min value (wrt w) of current (x,u) in the V_INT_MIN*/
+#ifdef HAS_CONTROL_BYTES	
+	char IS_CONTROL[NUM_CONTROL_BYTES];					/* flags, for each time step, if u is control action in x */
+#endif
+} xu_bag_t;
+
+
+/* the probability density function of the noise at specific point x in the error space */
+concrete_t pdf(const concrete_t* x);
+concrete_t pdf(const concrete_t* x) {
+	return inf;
+}
+
+/* the integration of the pdf based on an error region [err_lb, err_ub] */
+concrete_t integratePdf(const concrete_t* err_lb, const concrete_t* err_ub);
+concrete_t integratePdf(const concrete_t* err_lb, const concrete_t* err_ub) {
+
+	__private concrete_t int_pdf;
+	__private concrete_t e_base_diff;
+	__private concrete_t e_base_volume;
+	__private concrete_t e_base_center[ssDim];
+
+	/* compute the volume/center of the base */
+	e_base_volume = 1.0;
+	for (unsigned int i = 0; i < ssDim; i++) {
+		e_base_diff = err_ub[i] - err_lb[i];
+		e_base_volume *= e_base_diff;
+		e_base_center[i] = err_lb[i] + e_base_diff/2.0f;
+	}
+
+	/* using Mu as a the origin of the PDF(x) and computing the integration (probability)
+	   at each state within the cutting region
+	   here the intergration is approximated by a hyper rectangle from the ground level to the
+	   PDF(x_post) value, where x_post is the center of the hyper rectangle */
+	
+	int_pdf = pdf(e_base_center) * e_base_volume;
+
+	return int_pdf;
+}
+
+#ifdef SAVE_P_MATRIX
+/* this function computes the min/max provavilities for the elements in the containing cutting region 
+ * the idea is to consider all possible disturbances w in W and for each value we compute the Mu
+ * then we construct the PDF around this Mu and compute the probabilites and we ccompare them against
+ * a min/max values (i.e., compared to other w values). at the end, we have arrays of min/max prob 
+ * values over all possible disturbances.
+ */
+void compute_probabilities(__global xu_bag_t* XU_bag, const concrete_t* x, const concrete_t* u);
+void compute_probabilities(__global xu_bag_t* XU_bag, const concrete_t* x, const concrete_t* u){
+
+	__private concrete_t ssEta[ssDim] = SS_ETA_LIST;
+	__private concrete_t wsEta[wsDim] = WS_ETA_LIST;
+	__private concrete_t wsLb[wsDim]  = WS_LB_LIST;
+	__private concrete_t wsUb[wsDim]  = WS_UB_LIST;
+	__private symbolic_t wsWidths[wsDim] = WS_WIDTHS_LIST;
+	__private symbolic_t wSymbolsCount = WS_NUM_SYBOLS;
+	__private symbolic_t w_symbolic[wsDim];
+	__private concrete_t w_concrete[wsDim];
+	__private concrete_t Mu[ssDim];
+	__private concrete_t Mu_w0[ssDim];
+	__private concrete_t containingCuttingRegionLb[ssDim] = CUTTING_REGION_LB;
+	__private concrete_t containingCuttingRegionUb[ssDim] = CUTTING_REGION_UB;
+	__private symbolic_t containingCuttingRegionWidths[ssDim] = CUTTING_REGION_WIDTHS;
+	__private symbolic_t x_post_symbolic[ssDim];
+	__private concrete_t x_post_concrete[ssDim];
+	__private concrete_t x_post_concrete_lb[ssDim];
+	__private concrete_t x_post_concrete_ub[ssDim];
+	__private concrete_t pdf_error_lb[ssDim];
+	__private concrete_t pdf_error_ub[ssDim];
+
+#ifdef HAS_TARGET
+	if (is_target(x)) {
+		for (symbolic_t w = 0; w < wSymbolsCount; w++) {
+			for (unsigned int i = 0; i < NUM_REACH_STATES; i++) {
+				XU_bag->Pr[w][i] = 0.0;
+			}
+		}
+		return;
+	}
+#endif
+#ifdef HAS_AVOID
+	if (is_avoid(x)) {
+		for (symbolic_t w = 0; w < wSymbolsCount; w++) {
+			for (unsigned int i = 0; i < NUM_REACH_STATES; i++) {
+				XU_bag->Pr[w][i] = 0.0;
+			}
+		}
+		return;
+	}
+#endif
+
+	/* compute Mu when w=0 (possible post state without w effect) from current (x,u,w=0) */
+	for (unsigned int  i = 0; i < wsDim; i++)
+		w_concrete[i] = 0.0;
+	post_dynamics(Mu_w0, x, u, w_concrete);
+
+#ifndef PDF_NO_TRUNCATION
+	/* shift the containing cutting region based on Mu with w = 0*/
+	for (unsigned int i = 0; i < ssDim; i++) {
+		containingCuttingRegionLb[i] += Mu_w0[i];
+		containingCuttingRegionUb[i] += Mu_w0[i];
+	}
+#endif
+
+	/* iterate over all disturbance posibilities */
+	for (symbolic_t w = 0; w < wSymbolsCount; w++) {
+
+		/* computing the symbolic and concrete values of current (w) */
+		flat_to_symbolic(w_symbolic, wsDim, w, wsWidths);
+		symbolic_to_concrete(w_concrete, wsDim, w_symbolic, wsLb, wsUb, wsEta);
+
+		/* compute Mu (possible post state) from current (x,u,w) */
+		post_dynamics(Mu, x, u, w_concrete);	
+
+		// iterate over all reachable states in the cutting bound
+		for (symbolic_t k = 0; k < NUM_REACH_STATES; k++) {
+
+			/* computing the symbolic and concrete values of post-state */
+			flat_to_symbolic(x_post_symbolic, ssDim, k, containingCuttingRegionWidths);
+			symbolic_to_concrete(x_post_concrete, ssDim, x_post_symbolic, containingCuttingRegionLb, containingCuttingRegionUb, ssEta);
+
+			/* compute the error wrt Mu: (x-Mu) in case of additive noise */
+			for (unsigned int i = 0; i < ssDim; i++) {
+				x_post_concrete_lb[i] = x_post_concrete[i] - ssEta[i]/2.0f;
+				x_post_concrete_ub[i] = x_post_concrete[i] + ssEta[i]/2.0f;
+
+			#ifndef PDF_MULTIPLICATIVE_NOISE
+				pdf_error_lb[i] = x_post_concrete_lb[i]-Mu[i];
+				pdf_error_ub[i] = x_post_concrete_ub[i]-Mu[i];
+			#else
+				pdf_error_lb[i] = (x_post_concrete_lb[i]-Mu[i])/x[i];
+				pdf_error_ub[i] = (x_post_concrete_ub[i]-Mu[i])/x[i];
+			#endif
+			}
+
+			/* using Mu as a the origin of the PDF(x) and computing the integration (probability) at each state within the cutting region */
+			XU_bag->Pr[w][k] = integratePdf(pdf_error_lb, pdf_error_ub);
+		}
+	}
+
+	return;
+}
+#endif
+
+// pFaces-Including a KERNEL-Function: ABSTRACT
+/************************************************************************************************/
+/************************************************************************************************/
+/* KERNEL-Function: ABSTRACT														            */
+/************************************************************************************************/
+/************************************************************************************************/
+
+__kernel void abstract(__global xu_bag_t* XU_bags) {
+
+	/* essential vars */
+	__private symbolic_t x_flat;
+	__private symbolic_t u_flat;
+	__private symbolic_t flat_thread_idx;
+
+#ifdef SAVE_P_MATRIX
+	/* some variables needed if we will save P */
+	__private concrete_t ssEta[ssDim] = SS_ETA_LIST;
+	__private concrete_t ssLb[ssDim]  = SS_LB_LIST;
+	__private concrete_t ssUb[ssDim]  = SS_UB_LIST;
+	__private concrete_t isEta[isDim] = IS_ETA_LIST;
+	__private concrete_t isLb[isDim]  = IS_LB_LIST;
+	__private concrete_t isUb[isDim]  = IS_UB_LIST;
+
+	__private symbolic_t ssWidths[ssDim] = SS_WIDTHS_LIST;
+	__private symbolic_t isWidths[isDim] = IS_WIDTHS_LIST;
+
+	__private symbolic_t x_symbolic[ssDim];
+	__private symbolic_t u_symbolic[isDim];	
+	__private concrete_t x_concrete[ssDim];
+	__private concrete_t u_concrete[isDim];
+#endif
+
+
+	/* flat x and u indicies come directly from the scheduler */
+	x_flat = UNIVERSAL_INDEX_X;
+	u_flat = UNIVERSAL_INDEX_Y;
+
+	/* what is my memory position (including the case of sub-buffering) */
+	flat_thread_idx = (u_flat - GLOBAL_OFFSET_Y) + (x_flat - GLOBAL_OFFSET_X) * PROCESS_WIDTH_Y;
+
+	/* resetting the control values */
+#ifdef HAS_CONTROL_BYTES	
+	for (unsigned int i = 0; i < NUM_CONTROL_BYTES; i++)
+		XU_bags[flat_thread_idx].IS_CONTROL[i] = 0;
+#endif
+
+
+#ifdef SAVE_P_MATRIX
+	/* computing the symbolic and concrete values of current (x,u) */
+	flat_to_symbolic(x_symbolic, ssDim, x_flat, ssWidths);
+	flat_to_symbolic(u_symbolic, isDim, u_flat, isWidths);
+	symbolic_to_concrete(x_concrete, ssDim, x_symbolic, ssLb, ssUb, ssEta);
+	symbolic_to_concrete(u_concrete, isDim, u_symbolic, isLb, isUb, isEta);
+	
+	/* computing the probabilities */
+	compute_probabilities(&XU_bags[flat_thread_idx], x_concrete, u_concrete);
+#endif
+
+	return;
+}
+
+
+// pFaces-Including a KERNEL-Function: SYNTHESIZE
+/************************************************************************************************/
+/************************************************************************************************/
+/* KERNEL-Function: SYNTHESIZE	| runs on XU 													*/
+/************************************************************************************************/
+/************************************************************************************************/
+__kernel void synthesize(__global xu_bag_t* XU_bags, __global concrete_t* V) {
+
+	/* essential vars */
+	__private symbolic_t x_flat;
+	__private symbolic_t u_flat;
+	__private symbolic_t flat_thread_idx;
+	__private concrete_t v_int;
+	__private concrete_t v_int_min;
+	__private concrete_t p_val;
+
+	__private concrete_t ssEta[ssDim] = SS_ETA_LIST;
+	__private concrete_t ssLb[ssDim]  = SS_LB_LIST;
+	__private concrete_t ssUb[ssDim]  = SS_UB_LIST;
+	__private concrete_t isEta[isDim] = IS_ETA_LIST;
+	__private concrete_t isLb[isDim]  = IS_LB_LIST;
+	__private concrete_t isUb[isDim]  = IS_UB_LIST;	
+	__private symbolic_t ssWidths[ssDim] = SS_WIDTHS_LIST;
+	__private symbolic_t isWidths[isDim] = IS_WIDTHS_LIST;	
+	__private symbolic_t x_symbolic[ssDim];
+	__private concrete_t x_concrete[ssDim];			
+	__private symbolic_t u_symbolic[isDim];
+	__private concrete_t u_concrete[isDim];	
+	__private concrete_t containingCuttingRegionLb[ssDim] = CUTTING_REGION_LB;
+	__private concrete_t containingCuttingRegionUb[ssDim] = CUTTING_REGION_UB;
+	__private symbolic_t containingCuttingRegionWidths[ssDim] = CUTTING_REGION_WIDTHS;
+	__private concrete_t w_concrete[wsDim];
+	__private concrete_t Mu_w0[ssDim];
+	__private symbolic_t wSymbolsCount = WS_NUM_SYBOLS;
+	__private concrete_t wsEta[wsDim] = WS_ETA_LIST;
+	__private concrete_t wsLb[wsDim] = WS_LB_LIST;
+	__private concrete_t wsUb[wsDim] = WS_UB_LIST;
+	__private symbolic_t wsWidths[wsDim] = WS_WIDTHS_LIST;
+	__private symbolic_t w_symbolic[wsDim];	
+	__private symbolic_t x_post_symbolic[ssDim];
+	__private concrete_t x_post_concrete[ssDim];
+	__private concrete_t x_post_concrete_lb[ssDim];
+	__private concrete_t x_post_concrete_ub[ssDim];
+	__private concrete_t pdf_error_lb[ssDim];
+	__private concrete_t pdf_error_ub[ssDim];
+	__private concrete_t Mu[ssDim];	
+#ifdef HAS_TARGET	
+	__private concrete_t targetSetLb[ssDim] = TARGET_SET_LB;
+	__private concrete_t targetSetUb[ssDim] = TARGET_SET_UB;
+	__private symbolic_t targetSetWidths[ssDim] = TARGET_SET_WIDTHS;
+#endif	
+
+	/* flat x and u indicies come directly from the scheduler */
+	x_flat = UNIVERSAL_INDEX_X;
+	u_flat = UNIVERSAL_INDEX_Y;
+
+	/* what is my memory position (including the case of sub-buffering) */
+	flat_thread_idx = (u_flat - GLOBAL_OFFSET_Y) + (x_flat - GLOBAL_OFFSET_X) * PROCESS_WIDTH_Y;
+
+	/* computing the symbolic and concrete values of current (x,u) */
+	flat_to_symbolic(x_symbolic, ssDim, x_flat, ssWidths);
+	flat_to_symbolic(u_symbolic, isDim, u_flat, isWidths);
+	symbolic_to_concrete(x_concrete, ssDim, x_symbolic, ssLb, ssUb, ssEta);
+	symbolic_to_concrete(u_concrete, isDim, u_symbolic, isLb, isUb, isEta);
+
+#ifndef SAVE_P_MATRIX
+#ifdef HAS_TARGET
+	if (is_target(x_concrete)) {
+		XU_bags[flat_thread_idx].V_INT_MIN = 0.0;
+		return;
+	}
+#endif
+#ifdef HAS_AVOID
+	if (is_avoid(x_concrete)) {
+		XU_bags[flat_thread_idx].V_INT_MIN = 0.0;
+		return;
+	}
+#endif
+#endif
+
+	/* compute Mu when w=0 (possible post state without w effect) from current (x,u,w=0) */
+	for (unsigned int  i = 0; i < wsDim; i++) 
+		w_concrete[i] = 0.0;
+	post_dynamics(Mu_w0, x_concrete, u_concrete, w_concrete);	
+
+#ifdef HAS_AVOID
+	if (is_avoid(Mu_w0)) {
+		XU_bags[flat_thread_idx].V_INT_MIN = 0.0;
+		return;
+	}
+#endif
+
+#ifndef PDF_NO_TRUNCATION
+	/* shift the containing cutting region based on Mu with w = 0*/
+	for (unsigned int i = 0; i < ssDim; i++) {
+		containingCuttingRegionLb[i] += Mu_w0[i];
+		containingCuttingRegionUb[i] += Mu_w0[i];
+	}	
+#endif
+
+	/* for all w symbols */
+	v_int_min = 1.0;
+	for (symbolic_t w = 0; w < wSymbolsCount; w++){
+
+		/* computing the symbolic and concrete values of current (w) */
+		flat_to_symbolic(w_symbolic, wsDim, w, wsWidths);
+		symbolic_to_concrete(w_concrete, wsDim, w_symbolic, wsLb, wsUb, wsEta); 
+
+		/* Computing V_INT = P*V 
+		* P can be stored or conputed in the fly. Anyway, we only use those values P(u, x, i) that are under
+		* the PDF within the cutting bounds, since any other value P(u, x, i) is assumed to be zero.
+		* Then, we multiply only P values within the cutting region with their corresponding V values and do a sum.
+		*/
+		v_int = 0.0;
+		__private symbolic_t i_transform;
+		for (symbolic_t i = 0; i < NUM_REACH_STATES; i++) {
+
+			// get the value of p(x,u,w,i)
+	#ifdef SAVE_P_MATRIX
+			p_val = XU_bags[flat_thread_idx].Pr[w][i];
+	#else
+			/* computing the symbolic and concrete values of post-state */
+			flat_to_symbolic(x_post_symbolic, ssDim, i, containingCuttingRegionWidths);
+			symbolic_to_concrete(x_post_concrete, ssDim, x_post_symbolic, containingCuttingRegionLb, containingCuttingRegionUb, ssEta);
+
+			/* reset x_Concrete */
+			flat_to_symbolic(x_symbolic, ssDim, x_flat, ssWidths);
+			symbolic_to_concrete(x_concrete, ssDim, x_symbolic, ssLb, ssUb, ssEta);
+
+			/* compute Mu (possible post state) from current (x,u,w) */
+			post_dynamics(Mu, x_concrete, u_concrete, w_concrete);
+
+			/* compute the error wrt Mu: (x-Mu) in case of additive noise */
+			for (unsigned int j = 0; j < ssDim; j++) {
+				x_post_concrete_lb[j] = x_post_concrete[j] - ssEta[j]/2.0f;
+				x_post_concrete_ub[j] = x_post_concrete[j] + ssEta[j]/2.0f;
+			#ifndef PDF_MULTIPLICATIVE_NOISE
+				pdf_error_lb[j] = x_post_concrete_lb[j]-Mu[j];
+				pdf_error_ub[j] = x_post_concrete_ub[j]-Mu[j];
+			#else
+				pdf_error_lb[j] = (x_post_concrete_lb[j]-Mu[j])/x_concrete[i];
+				pdf_error_ub[j] = (x_post_concrete_ub[j]-Mu[j])/x_concrete[i];
+			#endif
+			}
+
+			/* using Mu as a the origin of the PDF(x) and computing the integration (probability) at the current post state */
+			p_val = integratePdf(pdf_error_lb, pdf_error_ub);
+	#endif
+
+			/*now we find the corresponding index in V fror the current elelment in the cutting region*/
+
+			// get the concrete value of x_i inside th containntg cuttinng region
+			flat_to_symbolic(x_symbolic, ssDim, i, containingCuttingRegionWidths);
+			symbolic_to_concrete(x_concrete, ssDim, x_symbolic, containingCuttingRegionLb, containingCuttingRegionUb, ssEta);
+
+
+			/* maybe the cutting region has some parts outside of the domain SS */
+			/* those post states are not then considered in the computation */
+			bool out_of_range = false;
+			for (unsigned int d = 0; d < ssDim; d++)
+				if (x_concrete[d] < ssLb[d] || x_concrete[d] > ssUb[d])
+					out_of_range = true;
+
+			if(out_of_range)
+				continue;
+
+			// get the flat index of x_i inside the X domain
+			concrete_to_symbolic(x_symbolic, ssDim, x_concrete, ssLb, ssEta);
+			symbolic_to_flat(&i_transform, ssDim, x_symbolic, ssWidths);
+
+			// compute v_int
+			if (i_transform >= PROCESS_WIDTH_X){
+				printf("synthesize: error: a thread tried to access mem out of range.");
+				printf("(x_concrete = %f,%f)!\n", x_concrete[0], x_concrete[1]);
+			}
+			else
+				v_int += V[i_transform] * p_val;
+		}
+
+	#ifdef HAS_TARGET
+		#ifdef PDF_MULTIPLICATIVE_NOISE
+		/* reset x_Concrete */
+		flat_to_symbolic(x_symbolic, ssDim, x_flat, ssWidths);
+		symbolic_to_concrete(x_concrete, ssDim, x_symbolic, ssLb, ssUb, ssEta);
+		#endif
+		/* compute P_0 and add it to V_int */
+		concrete_t sumP0 = 0.0;
+		for (symbolic_t t = 0; t < TARGET_SET_NUM_SYMBOLS; t++) {
+			/* computing the symbolic and concrete values of post-state */
+			flat_to_symbolic(x_post_symbolic, ssDim, t, targetSetWidths);
+			symbolic_to_concrete(x_post_concrete, ssDim, x_post_symbolic, targetSetLb, targetSetUb, ssEta);
+
+			/* compute the error wrt Mu_w0 */
+			for (unsigned int j = 0; j < ssDim; j++) {
+				x_post_concrete_lb[j] = x_post_concrete[j] - ssEta[j]/2.0f;
+				x_post_concrete_ub[j] = x_post_concrete[j] + ssEta[j]/2.0f;
+			#ifndef PDF_MULTIPLICATIVE_NOISE
+				pdf_error_lb[j] = x_post_concrete_lb[j]-Mu_w0[j];
+				pdf_error_ub[j] = x_post_concrete_ub[j]-Mu_w0[j];
+			#else
+				pdf_error_lb[j] = (x_post_concrete_lb[j]-Mu_w0[j])/x_concrete[i];
+				pdf_error_ub[j] = (x_post_concrete_ub[j]-Mu_w0[j])/x_concrete[i];
+			#endif
+			}
+
+			/* sum the probability of this target set with widths=eta and center=x_post_concrete*/
+			sumP0 += integratePdf(pdf_error_lb, pdf_error_ub);
+		}
+		v_int += sumP0;
+	#endif
+
+		/* minimize: get minimum value of all v_int (wrt w) */
+		if(v_int < v_int_min)
+			v_int_min = v_int;
+	}
+
+	/* set the computed v_int in the memory*/
+	XU_bags[flat_thread_idx].V_INT_MIN = v_int_min;
+
+	return;
+}
+
+
+/************************************************************************************************/
+/************************************************************************************************/
+/* KERNEL-Function: COLLECT	| runs on X															*/
+/************************************************************************************************/
+/************************************************************************************************/
+__kernel void collect(__global xu_bag_t* XU_bags, __global concrete_t* V) {
+
+	/* essential vars */
+	__private symbolic_t x_flat;
+	__private symbolic_t flat_thread_idx;
+	__private symbolic_t xu_idx;
+	__private concrete_t vIntMin;
+	__private concrete_t maxVint = 0.0;
+	
+
+	/* flat x and u indicies come directly from the scheduler */
+	x_flat = UNIVERSAL_INDEX_X;
+
+	/* what is my memory position (including the case of sub-buffering) */
+	flat_thread_idx = x_flat - GLOBAL_OFFSET_X;
+
+	/* iterate over all u in U and maximize the value of V_INT_MIN */
+	__private symbolic_t u_control = 0;
+	for (symbolic_t u = 0; u < UNIVERSAL_WIDTH_Y; u++) {
+		xu_idx = (u - GLOBAL_OFFSET_Y) + (x_flat - GLOBAL_OFFSET_X) * PROCESS_WIDTH_Y;
+		vIntMin = XU_bags[xu_idx].V_INT_MIN;
+
+		if (vIntMin > maxVint) {
+			maxVint = vIntMin;
+			u_control = u;
+		}
+	}
+
+#ifdef HAS_CONTROL_BYTES
+	// by the way, we shif the control actions here
+	// note that shifting the control actions is made to emulate the effect ok knowing the time steps
+	for (symbolic_t u = 0; u < UNIVERSAL_WIDTH_Y; u++) {
+		xu_idx = (u - GLOBAL_OFFSET_Y) + (x_flat - GLOBAL_OFFSET_X) * PROCESS_WIDTH_Y;
+		for (int c = NUM_CONTROL_BYTES-1; c >= 0; c--){
+			// shift current byte
+			char to_set = XU_bags[xu_idx].IS_CONTROL[c];
+			to_set = to_set << 1;
+
+			// if previous has one at end, get it
+			if (c != 0) {
+				char b_previous = XU_bags[xu_idx].IS_CONTROL[c-1];
+				if (b_previous & 0x80)
+					to_set = to_set | 0x01;
+			}
+
+			// set
+			XU_bags[xu_idx].IS_CONTROL[c] = to_set;
+		}
+	}
+#endif
+
+	/* setting the max-min value to the V array for the next synthesis iteration */
+	V[flat_thread_idx] = maxVint;
+
+#ifdef HAS_CONTROL_BYTES
+	/* setting the selected control */
+	xu_idx = (u_control - GLOBAL_OFFSET_Y) + (x_flat - GLOBAL_OFFSET_X) * PROCESS_WIDTH_Y;
+	XU_bags[xu_idx].IS_CONTROL[0] = XU_bags[xu_idx].IS_CONTROL[0] | 0x01;
+#endif	
+	return;
+}
