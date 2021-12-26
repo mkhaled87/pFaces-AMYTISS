@@ -1,5 +1,7 @@
 # **AMYTISS**: Parallel Automated Controller Synthesis for Large-scale Stochastic Systems  
 
+> **Note:** This tool works on top of the demo version of pFaces. If you face any LICENSE issues (e.g., expired license), install the latest version of pFaces or use the latest license file from the latest demo version of pFaces. Latest demo version of pFaces can always be found [here](https://github.com/parallall/pFaces/releases).
+
 Stochastic control systems are recently used to model and analyze various safety-critical systems such as traffic networks and self-driving cars.
 **AMYTISS** is introduced as a software tool, implemented as a kernel on top of the acceleration ecosystem [pFaces](http://www.parallall.com/pfaces), for designing correct-by-construction controllers of stochastic discrete-time systems.
 
