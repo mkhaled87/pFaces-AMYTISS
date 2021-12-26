@@ -386,33 +386,33 @@ namespace amytiss{
 
 		// realigning the LB/UB values of all spaces
 		for (size_t i = 0; i < ssDim; i++){
-			concrete_t new_lb = pfacesFlatSpace::alignValueToQuantizationGrid(ssLb[i], ssEta[i], ssLb[i], ssUb[i]);
+			concrete_t new_lb = amytissPDF::alignValueToQuantizationGrid(ssLb[i], ssEta[i], ssLb[i], ssUb[i]);
 			if (new_lb != ssLb[i]) ssWasMisAlignedFlag = true;
 			ssLb[i] = new_lb;
 
-			concrete_t new_ub = pfacesFlatSpace::alignValueToQuantizationGrid(ssUb[i], ssEta[i], ssLb[i], ssUb[i]);
+			concrete_t new_ub = amytissPDF::alignValueToQuantizationGrid(ssUb[i], ssEta[i], ssLb[i], ssUb[i]);
 			if (new_ub != ssUb[i]) ssWasMisAlignedFlag = true;
 			ssUb[i] = new_ub;
 		}
 	
 		if(!singletonInput){
 			for (size_t i = 0; i < isDim; i++) {
-				concrete_t new_lb = pfacesFlatSpace::alignValueToQuantizationGrid(isLb[i], isEta[i], isLb[i], isUb[i]);
+				concrete_t new_lb = amytissPDF::alignValueToQuantizationGrid(isLb[i], isEta[i], isLb[i], isUb[i]);
 				if (new_lb != isLb[i]) isWasMisAlignedFlag = true;
 				isLb[i] = new_lb;
 
-				concrete_t new_ub = pfacesFlatSpace::alignValueToQuantizationGrid(isUb[i], isEta[i], isLb[i], isUb[i]);
+				concrete_t new_ub = amytissPDF::alignValueToQuantizationGrid(isUb[i], isEta[i], isLb[i], isUb[i]);
 				if (new_ub != isUb[i]) isWasMisAlignedFlag = true;
 				isUb[i] = new_ub;
 			}
 		}
 		if(!singletonDisturbance){
 			for (size_t i = 0; i < wsDim; i++) {
-				concrete_t new_lb = pfacesFlatSpace::alignValueToQuantizationGrid(wsLb[i], wsEta[i], wsLb[i], wsUb[i]);
+				concrete_t new_lb = amytissPDF::alignValueToQuantizationGrid(wsLb[i], wsEta[i], wsLb[i], wsUb[i]);
 				if (new_lb != wsLb[i]) wsWasMisAlignedFlag = true;
 				wsLb[i] = new_lb;
 
-				concrete_t new_ub = pfacesFlatSpace::alignValueToQuantizationGrid(wsUb[i], wsEta[i], wsLb[i], wsUb[i]);
+				concrete_t new_ub = amytissPDF::alignValueToQuantizationGrid(wsUb[i], wsEta[i], wsLb[i], wsUb[i]);
 				if (new_ub != wsUb[i]) wsWasMisAlignedFlag = true;
 				wsUb[i] = new_ub;
 			}
@@ -518,8 +518,8 @@ namespace amytiss{
 				std::vector<concrete_t> targetSetUb(ssDim);
 				std::string target_data = "";
 				for (size_t i = 0; i < ssDim; i++){
-					target_hyperrect[2*i + 0] = pfacesFlatSpace::alignValueToQuantizationGrid(target_hyperrect[2*i + 0], ssEta[i], ssLb[i], ssUb[i]);
-					target_hyperrect[2*i + 1] = pfacesFlatSpace::alignValueToQuantizationGrid(target_hyperrect[2*i + 1], ssEta[i], ssLb[i], ssUb[i]);
+					target_hyperrect[2*i + 0] = amytissPDF::alignValueToQuantizationGrid(target_hyperrect[2*i + 0], ssEta[i], ssLb[i], ssUb[i]);
+					target_hyperrect[2*i + 1] = amytissPDF::alignValueToQuantizationGrid(target_hyperrect[2*i + 1], ssEta[i], ssLb[i], ssUb[i]);
 					targetSetLb[i] = target_hyperrect[2 * i + 0];
 					targetSetUb[i] = target_hyperrect[2 * i + 1];
 
@@ -583,8 +583,8 @@ namespace amytiss{
 
 					std::string avoid_data = "";
 					for (size_t i = 0; i < ssDim; i++) {
-						avoid_hyperrect[2 * i + 0] = pfacesFlatSpace::alignValueToQuantizationGrid(avoid_hyperrect[2 * i + 0], ssEta[i], ssLb[i], ssUb[i]);
-						avoid_hyperrect[2 * i + 1] = pfacesFlatSpace::alignValueToQuantizationGrid(avoid_hyperrect[2 * i + 1], ssEta[i], ssLb[i], ssUb[i]);
+						avoid_hyperrect[2 * i + 0] = amytissPDF::alignValueToQuantizationGrid(avoid_hyperrect[2 * i + 0], ssEta[i], ssLb[i], ssUb[i]);
+						avoid_hyperrect[2 * i + 1] = amytissPDF::alignValueToQuantizationGrid(avoid_hyperrect[2 * i + 1], ssEta[i], ssLb[i], ssUb[i]);
 
 						/* avoid data is only used in the low-level code to check if a point is avoid */
 						/* we inflate it with quarter-eta to avoid any precision errors in float comparison */

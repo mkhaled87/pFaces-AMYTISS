@@ -90,6 +90,49 @@ public:
     virtual
     void addToOutputFileMetadata(StringDataDictionary& metadata) = 0;
 
+
+    // a function to align points to quantization levels
+    // LB is the base here and eta is used to jump to quantization levels.
+    // UB is a guide and should not exceed and error of (quantization_allowed_preccision) from the closest level!
+    static
+    concrete_t alignValueToQuantizationGrid(
+        const concrete_t value, const concrete_t eta, 
+        const concrete_t lb, const concrete_t ub) {
+
+        // checking the quantization domain/levels
+        if(lb>ub)
+            throw std::runtime_error("alignValueToQuantizationGrid: The lb is greater than the ub !");
+
+        const concrete_t quantization_allowed_preccision = 0.0000001f;
+
+        concrete_t domain_length = std::abs(ub - lb);
+
+        if (quantization_allowed_preccision > domain_length)
+            throw std::runtime_error("alignValueToQuantizationGrid: The quantization space is bigger than the precision error !");
+
+        if(eta > domain_length)
+            throw std::runtime_error("alignValueToQuantizationGrid: Eta is greater than (ub-lb) !");
+
+        symbolic_t domain_slots_count = (symbolic_t)std::round(domain_length / eta);
+        concrete_t expected_ub = lb + ((concrete_t)domain_slots_count)*eta;
+
+        if (std::abs(expected_ub - ub) > quantization_allowed_preccision)
+            throw std::runtime_error("alignValueToQuantizationGrid: The quantization parametes are not consistent since (lb+round((ub-lb)/eta)*eta) not delta-close to (lb) !");
+
+        // aligning the value
+        if (value >= ub)
+            return expected_ub;
+
+        if (value <= lb)
+            return lb;
+
+        concrete_t distance = std::abs(value-lb);
+        symbolic_t num_slots = (symbolic_t)std::round(distance / eta);
+        concrete_t new_distance = lb + num_slots*eta;
+
+        return new_distance;
+    }
+
 };
 
 // PDF:: Normal Distribution

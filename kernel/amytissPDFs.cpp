@@ -297,7 +297,7 @@ amytissPDF_NormalDistribution::getRHSCuttingPoint() {
 
     for (size_t i = 0; i < ssDim; i++) {
         concrete_t val = std::sqrt(logVal / inv_covar_matrix[i][i]);
-        concrete_t valAligned = pfacesFlatSpace::alignValueToQuantizationGrid(val, ssEta[i], ssLb[i], ssUb[i]);
+        concrete_t valAligned = alignValueToQuantizationGrid(val, ssEta[i], ssLb[i], ssUb[i]);
 
         ret.push_back(valAligned);	
     }
@@ -331,10 +331,10 @@ amytissPDF_NormalDistribution::getOriginatedCuttingBound(){
 
             // assing the bounds including inflation from the disturbances
             for (size_t i = 0; i < positiveCuttingBounds.size(); i++) {
-                concrete_t valAlignedUb = pfacesFlatSpace::alignValueToQuantizationGrid(
+                concrete_t valAlignedUb = alignValueToQuantizationGrid(
                     positiveCuttingBounds[i], ssEta[i], ssLb[i], ssUb[i]);
 
-                concrete_t valAlignedLb = pfacesFlatSpace::alignValueToQuantizationGrid(
+                concrete_t valAlignedLb = alignValueToQuantizationGrid(
                     -1*positiveCuttingBounds[i], ssEta[i], ssLb[i], ssUb[i]);
 
                 cuttingBoundsLb.push_back(valAlignedLb);
