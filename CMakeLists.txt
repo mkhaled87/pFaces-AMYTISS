@@ -1,56 +1,26 @@
 cmake_minimum_required(VERSION 3.6)
 
-# Check: supported OS
-if(NOT APPLE AND NOT UNIX AND NOT WIN32)
-    message(FATAL_ERROR "You are using not-supported OS.")
-endif()
-
-# check installation of pFaces/pFaces-SDK
-if (WIN32)
-find_program(PFACES_BINARY "pfaces.bat")
-else()
-find_program(PFACES_BINARY "pfaces")
-endif()
-if( (NOT PFACES_BINARY) OR ("$ENV{PFACES_SDK_ROOT}" STREQUAL "") OR (NOT EXISTS "$ENV{PFACES_SDK_ROOT}/include") OR (NOT EXISTS "$ENV{PFACES_SDK_ROOT}/lib"))
-    message(FATAL_ERROR "couldn't find pFaces binary. Please make sure to install it correctly.")
-else()
-    file(READ "$ENV{PFACES_SDK_ROOT}/VERSION" PFACES_VERSION)
-    string(SUBSTRING "${PFACES_VERSION}" 24 3 PFACES_VERSION)
-    message(STATUS "pFaces binary and SDK environment found (pFaces v${PFACES_VERSION}).")
-endif()
-
-# [Update Here] give a name to the project
+# Name to the project
 project(pFaces-AMYTISS)
 
-# [Update Here] set kernel name and its sources
+# Include CMake configs for pFaces
+if("$ENV{PFACES_SDK_ROOT}" STREQUAL "")
+  message(FATAL_ERROR "Please make sure pFaces is installed correctly.")
+else()
+  include($ENV{PFACES_SDK_ROOT}/pfaces_kernel.cmake)
+endif()
+
+
+# Libraries needed fot this kernel: SymbolicCPP
+add_subdirectory(${PROJECT_SOURCE_DIR}/kernel/symboliccpp)
+
+# Kernel name and its sources
 set(PFACES_KERNEL amytiss)
 set(PFACES_KERNEL_SOURCES 
     ${PROJECT_SOURCE_DIR}/kernel/amytissPDFs.cpp
     ${PROJECT_SOURCE_DIR}/kernel/amytiss.cpp
 )
 set(PFACES_KERNEL_OUT_PATH "${PROJECT_SOURCE_DIR}/kernel-pack")
-
-# Set C++ Standard
-if (${PFACES_VERSION} GREATER_EQUAL 1.3)
-set(CMAKE_CXX_STANDARD 14)
-else()
-set(CMAKE_CXX_STANDARD 11)
-endif()
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# Check: Win -> MSVC
-if(WIN32 AND NOT MSVC)
-    message(FATAL_ERROR "We only support MSVC++ compiler in Windows.")
-endif()
-
-# fix CMake for Ubuntu
-if(UNIX)
-	set(CMAKE_PREFIX_PATH /usr/lib/x86_64-linux-gnu/cmake/)
-endif()
-
-# Needed packages
-find_package(OpenCL REQUIRED)
-find_package(cpprestsdk REQUIRED NAMES cpprestsdk cpprest)
 
 # Generic CMake instructions to make the kernel
 link_directories($ENV{PFACES_SDK_ROOT}/lib)
@@ -60,6 +30,7 @@ ADD_LIBRARY(${PFACES_KERNEL} SHARED
 target_include_directories(${PFACES_KERNEL} PUBLIC
     ${OpenCL_INCLUDE_DIR}
     $ENV{PFACES_SDK_ROOT}/include
+    ${PROJECT_SOURCE_DIR}/kernel/symboliccpp/include
 )
 set_target_properties(${PFACES_KERNEL}
     PROPERTIES
@@ -77,13 +48,13 @@ set_target_properties(${PFACES_KERNEL}
 )
 if (MSVC)
     set_target_properties(${PFACES_KERNEL} PROPERTIES LINK_FLAGS "/WHOLEARCHIVE:pfaces-sdk.lib")
-    target_link_libraries(${PFACES_KERNEL} ${OpenCL_LIBRARY} cpprestsdk::cpprest ws2_32)
+    target_link_libraries(${PFACES_KERNEL} ${OpenCL_LIBRARY} SymbolicCpp)
 elseif (APPLE)
     set_target_properties(${PFACES_KERNEL} PROPERTIES LINK_FLAGS "-Wl,-all_load -lpfaces-sdk")
-    target_link_libraries(${PFACES_KERNEL} ${OpenCL_LIBRARY} cpprestsdk::cpprest dl pthread ${OPENSSL_LIBRARIES})
+    target_link_libraries(${PFACES_KERNEL} ${OpenCL_LIBRARY} SymbolicCpp dl pthread)
 else()
     set_target_properties(${PFACES_KERNEL} PROPERTIES LINK_FLAGS "-Wl,--whole-archive -lpfaces-sdk -Wl,--no-whole-archive")
-    target_link_libraries(${PFACES_KERNEL} ${OpenCL_LIBRARY} cpprestsdk::cpprest pthread boost_system)
+    target_link_libraries(${PFACES_KERNEL} ${OpenCL_LIBRARY} SymbolicCpp)
 endif()
 
 # suppress some warnings
