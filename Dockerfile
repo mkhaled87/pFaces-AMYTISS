@@ -13,5 +13,5 @@ RUN apt-get install -y cmake wget git unzip build-essential cmake libcpprest-dev
 RUN mkdir pfaces; cd pfaces; wget https://github.com/parallall/pFaces/releases/download/Release_1.2.1d/pFaces-1.2.1-Ubuntu20.04.zip; unzip pFaces-1.2.1-Ubuntu20.04.zip; sh ./install.sh
 
 # install pfaces and AMYTISS (version that supports pFaces v1.2)
-RUN git clone --depth=1 https://github.com/mkhaled87/pFaces-AMYTISS
+RUN git clone https://github.com/mkhaled87/pFaces-AMYTISS
 RUN cd pFaces-AMYTISS; git checkout tags/PFACES_UP_TO_1.2; export PFACES_SDK_ROOT=$PWD/../pfaces/pfaces-sdk/; sh build.sh
