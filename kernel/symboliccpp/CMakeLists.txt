@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 3.6)
 project(SymbolicCpp)
 
-# Set C++ version
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 # where is the src and inc dirs
 set(SRC_DIR ${PROJECT_SOURCE_DIR}/src/)
 set(INC_DIR ${PROJECT_SOURCE_DIR}/include/)
