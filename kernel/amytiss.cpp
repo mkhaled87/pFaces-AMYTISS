@@ -747,7 +747,7 @@ namespace amytiss{
 
 
 		// updating the list of params
-		updatePrameters(params, paramvals);
+		updateParameters(params, paramvals);
 
 
 		// TASK3: Creating the kernel function and load their memory fingerprints
