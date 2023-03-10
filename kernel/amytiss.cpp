@@ -335,7 +335,7 @@ namespace amytiss{
 	/* the constructor: initiate data and prepapre memory maps*/
 	amytissKernel::amytissKernel(const std::shared_ptr<pfacesKernelLaunchState>& spLaunchState, const std::shared_ptr<pfacesConfigurationReader>& spCfg)
 		: pfaces2DKernel(
-			spLaunchState->getDefaultSourceFilePath(std::string(AMYTISS_KERNEL_NAME), spLaunchState->kernelScope, spLaunchState->kernelPackPath),
+			spLaunchState->getDefaultSourceFilePath(AMYTISS_KERNEL_NAME),
 			(size_t)spCfg->readConfigValueInt(AMYTISS_CONFIG_PARAM_states_dim),
 			(size_t)spCfg->readConfigValueInt(AMYTISS_CONFIG_PARAM_inputs_dim)
 		), m_spCfg(spCfg) {
@@ -752,7 +752,7 @@ namespace amytiss{
 
 		// TASK3: Creating the kernel function and load their memory fingerprints
 		//------------------------------------------------------------------------
-		std::string mem_fingerprint_file = spLaunchState->kernelPackPath + std::string("amytiss.mem");
+		std::string mem_fingerprint_file = spLaunchState->getKernelPackPath() + std::string("amytiss.mem");
 
 		size_t XU_bag_size = XU_bag::getSize(saveP, num_reach_states, time_steps, saveC, 
 			pfacesBigInt::getPrimitiveValue(wSpaceFlatWidth));
