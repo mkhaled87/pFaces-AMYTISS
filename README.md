@@ -3,7 +3,7 @@
 > **Note:** This tool works on top of the demo version of pFaces. If you face any LICENSE issues (e.g., expired license), install the latest version of pFaces or use the latest license file from the latest demo version of pFaces. Latest demo version of pFaces can always be found [here](https://github.com/parallall/pFaces/releases).
 
 Stochastic control systems are recently used to model and analyze various safety-critical systems such as traffic networks and self-driving cars.
-**AMYTISS** is introduced as a software tool, implemented as a kernel on top of the acceleration ecosystem [pFaces](http://www.parallall.com/pfaces), for designing correct-by-construction controllers of stochastic discrete-time systems.
+**AMYTISS** is introduced as a software tool, implemented as a kernel on top of the acceleration ecosystem [pFaces](https://github.com/parallall/pFaces), for designing correct-by-construction controllers of stochastic discrete-time systems.
 
 Check the presentation video of AMYTISS for a quick introduction and a demo:
 
@@ -59,7 +59,7 @@ $ oclgrind pfaces -CG -l
 
 #### pFaces
 
-You first need to have have [pFaces](http://www.parallall.com/pfaces) installed and working. Test the installation of pFaces and make sure it recognizes the parallel hardware in your machine by running the following command:
+You first need to have have [pFaces](https://github.com/parallall/pFaces) installed and working. Test the installation of pFaces and make sure it recognizes the parallel hardware in your machine by running the following command:
 
 ``` bash
 $ pfaces -CG -l
