@@ -374,7 +374,7 @@ namespace amytiss{
 			wsLb = pfacesUtils::sStr2Vector<concrete_t>(m_spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_disturbances_lb));
 			wsUb = pfacesUtils::sStr2Vector<concrete_t>(m_spCfg->readConfigValueString(AMYTISS_CONFIG_PARAM_disturbances_ub));
 
-			if (isDim == 0 || isEta.size() != isDim || isLb.size() != isDim || isUb.size() != isDim)
+			if (wsDim == 0 || wsEta.size() != wsDim || wsLb.size() != wsDim || wsUb.size() != wsDim)
 				throw std::runtime_error("amytissKernel::amytissKernel: Invalid parameters for the disturbances !");
 		}
 		else {
