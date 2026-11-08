@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.22...3.31)
 project(SymbolicCpp)
 
 # where is the src and inc dirs
