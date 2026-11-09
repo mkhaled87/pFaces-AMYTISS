@@ -1,5 +1,5 @@
 #include <pfaces-sdk.h>
-#include <symbolicc++.h>
+#include <sstream>
 
 #include "amytissPDFs.h"
 
@@ -252,27 +252,34 @@ amytissPDF_NormalDistribution::getAdditionalDefines(){
 std::string 
 amytissPDF_NormalDistribution::getPDFBody(){
 
-        pfacesTerminal::showMessage(std::string("Computing the probability distribution function (PDF) symbolically .... "), false);
+        pfacesTerminal::showMessage(std::string("Computing the probability distribution function (PDF) .... "), false);
         pfacesTimer timer;
         timer.tic();
 
-		// required symbic vectors/matricies
-		Symbolic x("x", (int)ssDim);
-		Symbolic SigmaInv("SigmaInv", (int)ssDim, (int)ssDim);
+        // e = -0.5*(x)'*inv(Sigma)*(x)
+        std::stringstream ssQuad;
+        for (size_t col = 0; col < ssDim; ++col) {
+            for (size_t row = 0; row < ssDim; ++row) {
+                ssQuad << "-0.5*";
+                if (row == col) {
+                    ssQuad << "pow(x" << col << ",(2))*SigmaInv(" << row << "," << col << ")";
+                } else {
+                    ssQuad << "x" << row << "*SigmaInv(" << row << "," << col << ")*x" << col;
+                }
+            }
+        }
 
-		// e = -0.5*(x)'*inv(Sigma)*(x)
-		Symbolic e = -0.5 * x.transpose() * SigmaInv * x;
-		concrete_t val = (concrete_t)(1.0l / std::sqrt(std::pow(2.0l * M_PI, ssDim) * det_covar_matrix));
+        concrete_t val = (concrete_t)(1.0l / std::sqrt(std::pow(2.0l * M_PI, ssDim) * det_covar_matrix));
 
-		// the pdf as a strings	
-		std::stringstream ssE;
-		ssE << "return " << val << "*exp((float)(" << e << "));";
-		std::string strRet = ssE.str();
+        // the pdf as a string
+        std::stringstream ssE;
+        ssE << "return " << val << "*exp((float)(" << ssQuad.str() << "));";
+        std::string strRet = ssE.str();
 
         double time = timer.toc().count();
         pfacesTerminal::showMessage(std::string("done ! [") + std::to_string(time) + std::string(" seconds]"));
 
-		return strRet;
+        return strRet;
 }
 
 

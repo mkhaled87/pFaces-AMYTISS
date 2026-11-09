@@ -10,9 +10,6 @@ else()
   include($ENV{PFACES_SDK_ROOT}/pfaces_kernel.cmake)
 endif()
 
-# Libraries needed fot this kernel: SymbolicCPP
-add_subdirectory(${PROJECT_SOURCE_DIR}/kernel/symboliccpp)
-
 # Kernel name and its sources
 set(PFACES_KERNEL amytiss)
 set(PFACES_KERNEL_SOURCES 
@@ -27,9 +24,7 @@ add_library(${PFACES_KERNEL} SHARED
 )
 target_include_directories(${PFACES_KERNEL} PUBLIC
     ${PROJECT_SOURCE_DIR}/kernel
-    ${PROJECT_SOURCE_DIR}/kernel/symboliccpp/include
 )
-target_link_libraries(${PFACES_KERNEL} SymbolicCpp)
 
 # Include link configs for the kernel.
 include($ENV{PFACES_SDK_ROOT}/pfaces_link.cmake)

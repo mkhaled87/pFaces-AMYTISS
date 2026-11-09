@@ -9,7 +9,6 @@
 #define _KERNEL_AMYTISS_H_
 
 /* pfaces related include files */
-#define _PFACES_INCLUDE_SYMBOLIC_LIBRARY
 #include <pfaces-sdk.h>
 #include "amytissPDFs.h"
 

@@ -5,7 +5,7 @@
 *      author: M. Khaled
 */
 #include "amytiss.h"
-#include <symbolicc++.h>
+#include <sstream>
 
 namespace amytiss{
 
@@ -725,7 +725,7 @@ namespace amytiss{
 
 			std::vector<std::string> file_names = pfacesUtils::strSplit(extra_inc_files, ";", false);
 			for (size_t i = 0; i < file_names.size(); i++) {
-				string expanded_file_names = file_names[i];
+				std::string expanded_file_names = file_names[i];
 				expanded_file_names = pfacesUtils::strReplaceAll(expanded_file_names, ".\\", CFG_DIR);
 				expanded_file_names = pfacesUtils::strReplaceAll(expanded_file_names, "./", CFG_DIR);
 				if (!pfacesFileIO::isFileExist(expanded_file_names)) {
