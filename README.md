@@ -130,6 +130,105 @@ $ pfaces -CG -d 1 -k amytiss@../../kernel-pack -cfg toy2d.cfg -p
 
 where **pfaces** calls pFaces launcher, "-CG -d 1" asks pFaces to run AMYTISS in the first device of all available devices, "-k amytiss@../../kernel-pack" tells pFaces about AMYTISS and where it is located, "-cfg toy2d.cfg" asks pFaces to hand the configuration file to AMYTISS, and "-p" asks pFaces to collect profiling information. Make sure to replace each / with \ in case you are using Windows command line.
 
+## **Verified Stochastic Controller Synthesis Benchmarks**
+
+AMYTISS includes an end-to-end (E2E) automated verification suite that validates synthesized controllers against their theoretical dynamic-programming satisfaction guarantees $V(x_0)$ via closed-loop Monte Carlo rollouts under additive Gaussian disturbance.
+
+The entire benchmark suite can be executed with a single command:
+```bash
+./test.sh
+```
+
+---
+
+### **1. 2D Stochastic Reachability (`ex_toy_reach`)**
+
+Validates finite-horizon stochastic reachability for a 2D non-linear system under additive Gaussian noise.
+
+* **Dynamics:**
+  $$\begin{cases} x_0(k+1) = x_0(k) + 2 u_0(k) \cos(u_1(k)) + w_0(k) \\ x_1(k+1) = x_1(k) + 2 u_0(k) \sin(u_1(k)) + w_1(k) \end{cases}$$
+  where state $x \in [-10.0, 10.0]^2$ ($\eta_x = [0.5, 0.5]$), input $u \in [-1.0, 1.0]^2$ ($\eta_u = [0.1, 0.1]$), and disturbance $w \sim \mathcal{N}(0, \Sigma)$ with $\Sigma = \operatorname{diag}(0.75, 0.75)$.
+* **Specification:** Steer the system from $x_0 = [-1.5, -1.5]$ into Target Set $T = [5.0, 8.0] \times [5.0, 8.0]$ within $T = 16$ time steps.
+* **Theoretical Guarantee:** $V(x_0) = 0.999236$ (99.92%).
+* **Verification Result:** $1000 / 1000$ rollouts reached the target ($P_{\text{emp}} = 100.0\%$, Wilson 99.7% CI: $[0.9911, 1.0000]$), reaching target in $5.83 \pm 1.18$ steps on average.
+
+**Commands to run synthesis and verification:**
+```bash
+cd examples/ex_toy_reach
+pfaces -CG -k amytiss.cpu@../../kernel-pack -cfg ./toy2d.cfg -d 1 -p
+python3 ./verify_closedloop.py
+```
+
+![2D Stochastic Reachability Verification](examples/ex_toy_reach/closedloop_simulation.png)
+
+---
+
+### **2. 2D Stochastic Safety Invariance (`ex_toy_safety`)**
+
+Validates stochastic safety invariance for a high-gain non-linear control system.
+
+* **Dynamics:**
+  $$\begin{cases} x_0(k+1) = x_0(k) + 10 u_0(k) \cos(u_1(k)) + w_0(k) \\ x_1(k+1) = x_1(k) + 10 u_0(k) \sin(u_1(k)) + w_1(k) \end{cases}$$
+  where state $x \in [-10.0, 10.0]^2$ ($\eta_x = [0.5, 0.5]$), input $u \in [-1.0, 1.0]^2$ ($\eta_u = [0.2, 0.2]$), and disturbance $w \sim \mathcal{N}(0, \Sigma)$ with $\Sigma = \operatorname{diag}(0.75, 0.75)$.
+* **Specification:** Maintain the state strictly within Safe Set $S = [-10.0, 10.0] \times [-10.0, 10.0]$ from $x_0 = [0.0, 0.0]$ across all $T = 8$ time steps.
+* **Theoretical Guarantee:** $V(x_0) = 0.997943$ (99.79%).
+* **Verification Result:** $200 / 200$ rollouts remained safely inside bounds ($P_{\text{emp}} = 100.0\%$, Wilson 99.7% CI: $[0.9569, 1.0000]$).
+
+**Commands to run synthesis and verification:**
+```bash
+cd examples/ex_toy_safety
+pfaces -CG -k amytiss.cpu@../../kernel-pack -cfg ./toy2d.cfg -d 1 -p
+python3 ./verify_safety.py
+```
+
+![2D Stochastic Safety Invariance Verification](examples/ex_toy_safety/closedloop_safety.png)
+
+---
+
+### **3. 2D Obstacle Circumnavigation Reach-Avoid (`ex_toy_reachavoid`)**
+
+Validates stochastic reach-avoid synthesis where an unsafe obstacle set separates the initial state envelope from the target set.
+
+* **Dynamics:**
+  $$\begin{cases} x_0(k+1) = x_0(k) + 2 u_0(k) \cos(u_1(k)) + w_0(k) \\ x_1(k+1) = x_1(k) + 2 u_0(k) \sin(u_1(k)) + w_1(k) \end{cases}$$
+  where state $x \in [-10.0, 10.0]^2$ ($\eta_x = [0.5, 0.5]$), input $u \in [-1.0, 1.0]^2$ ($\eta_u = [0.1, 0.1]$), and disturbance $w \sim \mathcal{N}(0, \Sigma)$ with $\Sigma = \operatorname{diag}(0.75, 0.75)$.
+* **Specification:** Reach Target Set $T = [5.0, 8.0] \times [5.0, 8.0]$ from $x_0 = [-2.5, 3.5]$ within $T = 16$ time steps while strictly avoiding Obstacle $A = [-1.5, 1.5] \times [-1.5, 1.5]$.
+* **Theoretical Guarantee:** $V(x_0) = 0.999380$ (99.94%).
+* **Verification Result:** $199 / 200$ rollouts reached the target without obstacle collision ($P_{\text{emp}} = 99.50\%$, 1 avoid hit, Wilson 99.7% CI: $[0.9478, 0.9995]$), circumnavigating the obstacle north and reaching target in $4.74 \pm 1.00$ steps on average.
+
+**Commands to run synthesis and verification:**
+```bash
+cd examples/ex_toy_reachavoid
+pfaces -CG -k amytiss.cpu@../../kernel-pack -cfg ./toy2d.cfg -d 1 -p
+python3 ./verify_reachavoid.py
+```
+
+![2D Obstacle Circumnavigation Reach-Avoid Verification](examples/ex_toy_reachavoid/closedloop_reachavoid.png)
+
+---
+
+### **4. 3-Room Coupled Continuous Thermal Comfort Control (`ex_roomtemp3`)**
+
+Validates multi-room thermal network safety where heat transfers between coupled rooms and dissipation occurs to a cold outdoor environment ($T_e = -1.0^\circ\text{C}$).
+
+* **Dynamics:**
+  $$\begin{cases} x_0(k+1) = (a - \gamma u_0) x_0 + \eta_c (x_1 + x_2) + \gamma T_h u_0 + \beta T_e + w_0 \\ x_1(k+1) = a x_1 + \eta_c (x_0 + x_2) + \beta T_e + w_1 \\ x_2(k+1) = (a - \gamma u_1) x_2 + \eta_c (x_0 + x_1) + \gamma T_h u_1 + \beta T_e + w_2 \end{cases}$$
+  where $a = 1 - 2\eta_c - \beta = 0.578$, $\eta_c = 0.20$, $\beta = 0.022$, $\gamma = 0.05$, $T_h = 50.0^\circ\text{C}$, $T_e = -1.0^\circ\text{C}$. Heaters in Rooms 1 and 3 are actuated ($u \in [0.0, 1.0]^2$), while Room 2 is unheated. Additive noise $w \sim \mathcal{N}(0, \Sigma)$ with $\Sigma = \operatorname{diag}(0.05, 0.05, 0.05)$ ($\sigma = 0.2236^\circ\text{C}$).
+* **Specification:** Maintain all three room temperatures inside Comfort Zone $S = [19.0, 21.0]^\circ\text{C}^3$ from $x_0 = [20.0, 20.0, 20.0]^\circ\text{C}$ for all $T = 8$ time steps.
+* **Theoretical Guarantee:** $V(x_0) = 0.091903$ (9.19%).
+* **Verification Result:** $76 / 200$ rollouts remained completely inside comfort bounds ($P_{\text{emp}} = 38.00\% \ge 9.19\%$, Wilson 99.7% CI: $[0.2843, 0.4860]$), meeting and exceeding the theoretical lower bound.
+
+**Commands to run synthesis and verification:**
+```bash
+cd examples/ex_roomtemp3
+pfaces -CG -k amytiss.cpu@../../kernel-pack -cfg ./roomtemp3.cfg -d 1 -p
+python3 ./verify_safety.py
+```
+
+![3-Room Coupled Continuous Thermal Safety Verification](examples/ex_roomtemp3/closedloop_roomtemp3.png)
+
+---
+
 ## **Designing your own example**
 
 We recommend copying and modifying one of the provided examples to avoid syntactical mistakes. Examples are simply configuration files that asks AMYTISS to achieve specific tasks. The next subsection will guide you understand the fields in AMYTISS config files.
