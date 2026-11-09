@@ -311,7 +311,7 @@ def plot_safety_verification(
         f"Empirical $P_{{emp}}$: {p_emp:.6f}",
         f"Theoretical $V(x_0)$: {v_theoretical:.6f}",
         f"Wilson 99.7% CI: [{ci_lower:.4f}, {ci_upper:.4f}]",
-        f"Disturbance: $\\Sigma = \\operatorname{{diag}}({covar[0,0]:.2f}, {covar[1,1]:.2f})$",
+        f"Disturbance: $\\Sigma = \\mathrm{{diag}}({covar[0,0]:.2f}, {covar[1,1]:.2f})$",
         f"Time Horizon: {time_steps} steps",
         "E2E Verification Status: PASSED",
     ]

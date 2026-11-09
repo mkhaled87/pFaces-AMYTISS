@@ -274,7 +274,7 @@ def plot_roomtemp3_verification(
         f"Empirical $P_{{emp}}$: {p_emp:.6f}",
         f"Theoretical Guarantee $V(x_0)$: {v_theoretical:.6f}",
         f"Wilson 99.7% CI: [{ci_lower:.4f}, {ci_upper:.4f}]",
-        f"Disturbance: $\\Sigma = \\operatorname{{diag}}({covar[0,0]:.3f}, {covar[1,1]:.3f}, {covar[2,2]:.3f})$",
+        f"Disturbance: $\\Sigma = \\mathrm{{diag}}({covar[0,0]:.3f}, {covar[1,1]:.3f}, {covar[2,2]:.3f})$",
         f"Time Horizon: {time_steps} steps",
         "E2E Verification Status: PASSED",
     ]

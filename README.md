@@ -147,7 +147,7 @@ Validates finite-horizon stochastic reachability for a 2D non-linear system unde
 
 * **Dynamics:**
   $$\begin{cases} x_0(k+1) = x_0(k) + 2 u_0(k) \cos(u_1(k)) + w_0(k) \\ x_1(k+1) = x_1(k) + 2 u_0(k) \sin(u_1(k)) + w_1(k) \end{cases}$$
-  where state $x \in [-10.0, 10.0]^2$ ($\eta_x = [0.5, 0.5]$), input $u \in [-1.0, 1.0]^2$ ($\eta_u = [0.1, 0.1]$), and disturbance $w \sim \mathcal{N}(0, \Sigma)$ with $\Sigma = \operatorname{diag}(0.75, 0.75)$.
+  where state $x \in [-10.0, 10.0]^2$ ($\eta_x = [0.5, 0.5]$), input $u \in [-1.0, 1.0]^2$ ($\eta_u = [0.1, 0.1]$), and disturbance $w \sim \mathcal{N}(0, \Sigma)$ with $\Sigma = \mathrm{diag}(0.75, 0.75)$.
 * **Specification:** Steer the system from $x_0 = [-1.5, -1.5]$ into Target Set $T = [5.0, 8.0] \times [5.0, 8.0]$ within $T = 16$ time steps.
 * **Theoretical Guarantee:** $V(x_0) = 0.999236$ (99.92%).
 * **Verification Result:** $1000 / 1000$ rollouts reached the target ($P_{\text{emp}} = 100.0\%$, Wilson 99.7% CI: $[0.9911, 1.0000]$), reaching target in $5.83 \pm 1.18$ steps on average.
@@ -169,7 +169,7 @@ Validates stochastic safety invariance for a high-gain non-linear control system
 
 * **Dynamics:**
   $$\begin{cases} x_0(k+1) = x_0(k) + 10 u_0(k) \cos(u_1(k)) + w_0(k) \\ x_1(k+1) = x_1(k) + 10 u_0(k) \sin(u_1(k)) + w_1(k) \end{cases}$$
-  where state $x \in [-10.0, 10.0]^2$ ($\eta_x = [0.5, 0.5]$), input $u \in [-1.0, 1.0]^2$ ($\eta_u = [0.2, 0.2]$), and disturbance $w \sim \mathcal{N}(0, \Sigma)$ with $\Sigma = \operatorname{diag}(0.75, 0.75)$.
+  where state $x \in [-10.0, 10.0]^2$ ($\eta_x = [0.5, 0.5]$), input $u \in [-1.0, 1.0]^2$ ($\eta_u = [0.2, 0.2]$), and disturbance $w \sim \mathcal{N}(0, \Sigma)$ with $\Sigma = \mathrm{diag}(0.75, 0.75)$.
 * **Specification:** Maintain the state strictly within Safe Set $S = [-10.0, 10.0] \times [-10.0, 10.0]$ from $x_0 = [0.0, 0.0]$ across all $T = 8$ time steps.
 * **Theoretical Guarantee:** $V(x_0) = 0.997943$ (99.79%).
 * **Verification Result:** $200 / 200$ rollouts remained safely inside bounds ($P_{\text{emp}} = 100.0\%$, Wilson 99.7% CI: $[0.9569, 1.0000]$).
@@ -191,7 +191,7 @@ Validates stochastic reach-avoid synthesis where an unsafe obstacle set separate
 
 * **Dynamics:**
   $$\begin{cases} x_0(k+1) = x_0(k) + 2 u_0(k) \cos(u_1(k)) + w_0(k) \\ x_1(k+1) = x_1(k) + 2 u_0(k) \sin(u_1(k)) + w_1(k) \end{cases}$$
-  where state $x \in [-10.0, 10.0]^2$ ($\eta_x = [0.5, 0.5]$), input $u \in [-1.0, 1.0]^2$ ($\eta_u = [0.1, 0.1]$), and disturbance $w \sim \mathcal{N}(0, \Sigma)$ with $\Sigma = \operatorname{diag}(0.75, 0.75)$.
+  where state $x \in [-10.0, 10.0]^2$ ($\eta_x = [0.5, 0.5]$), input $u \in [-1.0, 1.0]^2$ ($\eta_u = [0.1, 0.1]$), and disturbance $w \sim \mathcal{N}(0, \Sigma)$ with $\Sigma = \mathrm{diag}(0.75, 0.75)$.
 * **Specification:** Reach Target Set $T = [5.0, 8.0] \times [5.0, 8.0]$ from $x_0 = [-2.5, 3.5]$ within $T = 16$ time steps while strictly avoiding Obstacle $A = [-1.5, 1.5] \times [-1.5, 1.5]$.
 * **Theoretical Guarantee:** $V(x_0) = 0.999380$ (99.94%).
 * **Verification Result:** $199 / 200$ rollouts reached the target without obstacle collision ($P_{\text{emp}} = 99.50\%$, 1 avoid hit, Wilson 99.7% CI: $[0.9478, 0.9995]$), circumnavigating the obstacle north and reaching target in $4.74 \pm 1.00$ steps on average.
@@ -213,7 +213,7 @@ Validates multi-room thermal network safety where heat transfers between coupled
 
 * **Dynamics:**
   $$\begin{cases} x_0(k+1) = (a - \gamma u_0) x_0 + \eta_c (x_1 + x_2) + \gamma T_h u_0 + \beta T_e + w_0 \\ x_1(k+1) = a x_1 + \eta_c (x_0 + x_2) + \beta T_e + w_1 \\ x_2(k+1) = (a - \gamma u_1) x_2 + \eta_c (x_0 + x_1) + \gamma T_h u_1 + \beta T_e + w_2 \end{cases}$$
-  where $a = 1 - 2\eta_c - \beta = 0.578$, $\eta_c = 0.20$, $\beta = 0.022$, $\gamma = 0.05$, $T_h = 50.0^\circ\text{C}$, $T_e = -1.0^\circ\text{C}$. Heaters in Rooms 1 and 3 are actuated ($u \in [0.0, 1.0]^2$), while Room 2 is unheated. Additive noise $w \sim \mathcal{N}(0, \Sigma)$ with $\Sigma = \operatorname{diag}(0.05, 0.05, 0.05)$ ($\sigma = 0.2236^\circ\text{C}$).
+  where $a = 1 - 2\eta_c - \beta = 0.578$, $\eta_c = 0.20$, $\beta = 0.022$, $\gamma = 0.05$, $T_h = 50.0^\circ\text{C}$, $T_e = -1.0^\circ\text{C}$. Heaters in Rooms 1 and 3 are actuated ($u \in [0.0, 1.0]^2$), while Room 2 is unheated. Additive noise $w \sim \mathcal{N}(0, \Sigma)$ with $\Sigma = \mathrm{diag}(0.05, 0.05, 0.05)$ ($\sigma = 0.2236^\circ\text{C}$).
 * **Specification:** Maintain all three room temperatures inside Comfort Zone $S = [19.0, 21.0]^\circ\text{C}^3$ from $x_0 = [20.0, 20.0, 20.0]^\circ\text{C}$ for all $T = 8$ time steps.
 * **Theoretical Guarantee:** $V(x_0) = 0.091903$ (9.19%).
 * **Verification Result:** $76 / 200$ rollouts remained completely inside comfort bounds ($P_{\text{emp}} = 38.00\% \ge 9.19\%$, Wilson 99.7% CI: $[0.2843, 0.4860]$), meeting and exceeding the theoretical lower bound.
